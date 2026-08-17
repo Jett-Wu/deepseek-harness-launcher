@@ -4,7 +4,7 @@ title DeepSeek Harness Launcher
 
 rem ===========================================================================
 rem  DeepSeek Harness one-click launcher (official npm package @deepseek-ai/dsh)
-rem  Double-click to start | "<name> update" to update | "<name> check" to diagnose
+rem  Double-click to start | "<name> update" | "<name> check" | "<name> uninstall"
 rem ===========================================================================
 
 rem ---- configuration ----
@@ -24,6 +24,7 @@ rem ---- subcommands ----
 if /i "%~1"=="check"        goto :check_env
 if /i "%~1"=="update"       goto :do_update
 if /i "%~1"=="update-check" goto :update_check
+if /i "%~1"=="uninstall"    goto :do_uninstall
 
 rem ---- main: reuse / detect / install ----
 curl -s -o nul -m 1 "%URL%/" 2>nul && goto :already_running
@@ -35,7 +36,10 @@ if not errorlevel 1 goto :use_global
 where node >nul 2>nul
 if errorlevel 1 goto :install_node
 where npm >nul 2>nul
-if errorlevel 1 goto :bail_npm
+if errorlevel 1 (
+    set "BAIL_MSG=Node.js found but npm is missing. Please reinstall Node.js:"
+    goto :bail
+)
 
 rem ---- first-run install ----
 :do_install
@@ -109,24 +113,23 @@ rem ---- Node.js setup ----
 echo.
 echo Node.js is required but not found.
 where winget >nul 2>nul
-if errorlevel 1 goto :manual_node
+if errorlevel 1 (
+    set "BAIL_MSG=Please install Node.js LTS manually, then run this script again:"
+    goto :bail
+)
 echo Installing Node.js LTS via winget (~1-2 min; approve UAC prompt if asked)...
 winget install --id OpenJS.NodeJS.LTS -e --accept-package-agreements --accept-source-agreements --disable-interactivity
-if errorlevel 1 goto :manual_node
+if errorlevel 1 (
+    set "BAIL_MSG=winget install failed. Please install Node.js LTS manually:"
+    goto :bail
+)
 echo Node.js installed. Continuing...
 goto :refresh_path
 
-:manual_node
+:bail
 echo.
-echo Please install Node.js LTS manually, then run this script again:
+echo %BAIL_MSG%
 echo   https://nodejs.org/
-start "" https://nodejs.org/
-pause
-exit /b 1
-
-:bail_npm
-echo.
-echo Node.js found but npm is missing. Reinstall Node.js: https://nodejs.org/
 start "" https://nodejs.org/
 pause
 exit /b 1
@@ -163,6 +166,8 @@ if not defined REMOTE exit /b 0
 set "LOCAL="
 for /f "delims=" %%v in ('call "%BIN%" --version 2^>nul') do set "LOCAL=%%v"
 if not defined LOCAL exit /b 0
+if "%REMOTE:~0,1%"=="v" set "REMOTE=%REMOTE:~1%"
+if "%LOCAL:~0,1%"=="v" set "LOCAL=%LOCAL:~1%"
 if "%REMOTE%"=="%LOCAL%" exit /b 0
 echo.
 echo [update] New version %REMOTE% (current %LOCAL%). Updating in background...
@@ -186,6 +191,25 @@ if errorlevel 1 (
     echo Updated!
     > "%STAMP%" echo %date%
 )
+goto :done_pause
+
+rem ---- uninstall ----
+:do_uninstall
+echo.
+echo Uninstalling %APP%...
+curl -s -o nul -m 1 "%URL%/" 2>nul
+if not errorlevel 1 echo   [notice] %APP% appears to be running - close it first for a clean removal.
+if not exist "%INSTALL_DIR%" goto :uninstall_done
+echo   Removing %INSTALL_DIR% ...
+rmdir /s /q "%INSTALL_DIR%"
+if exist "%INSTALL_DIR%" (
+    echo   [notice] Some files could not be removed. Close %APP% and retry.
+) else (
+    echo   Removed.
+)
+:uninstall_done
+echo.
+echo Uninstall finished. Delete this script file if you no longer need it.
 goto :done_pause
 
 rem ---- diagnose ----
