@@ -1,4 +1,8 @@
-<h1 align="center">🚀 DeepSeek Harness Launcher</h1>
+<p align="center">
+  <a href="#english">🇬🇧 English</a> · <a href="#chinese">🇨🇳 中文</a>
+</p>
+
+<h1 align="center" id="english">🚀 DeepSeek Harness Launcher</h1>
 
 <p align="center">
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
@@ -86,7 +90,7 @@ Managed by the official dsh program itself; the script doesn't read or upload th
 
 ---
 
-<h1 align="center">🚀 DeepSeek Harness 一键启动器</h1>
+<h1 align="center" id="chinese">🚀 DeepSeek Harness 一键启动器</h1>
 
 <p align="center">
   <b>即下即用 · 只装官方包 · 零配置 · 无第三方代码</b>
