@@ -50,6 +50,10 @@ This script exists so you run **the official program, not an untrusted repack**:
 - ✅ The entire logic is one `.bat` file you can audit line by line
 - ✅ No data collection — the only network activity is installing/updating the official package
 
+## ⚠️ Disclaimer
+
+This is a **community tool**, not an official DeepSeek product. It only downloads and runs the official `@deepseek-ai/dsh` npm package; it is not affiliated with or endorsed by DeepSeek.
+
 ## 🧠 How it works
 
 ```
@@ -133,6 +137,10 @@ Managed by the official dsh program itself; the script doesn't read or upload th
 - ✅ 不下载、不执行任何第三方可执行文件
 - ✅ 全部逻辑就是一个 `.bat` 文件，可逐行审计
 - ✅ 不收集任何数据，唯一联网行为是安装/更新官方包本身
+
+## ⚠️ 免责声明
+
+这是一个**社区工具**，不是 DeepSeek 官方产品。它只负责下载并运行官方 `@deepseek-ai/dsh` npm 包，与 DeepSeek 官方无隶属或背书关系。
 
 ## 🧠 工作原理
 

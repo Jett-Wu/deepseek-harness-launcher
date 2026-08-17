@@ -149,7 +149,7 @@ goto :do_install
 
 rem ---- install / update helper ----
 :npm_install
-call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit --no-package-lock --loglevel=error
+call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit --no-package-lock
 exit /b %ERRORLEVEL%
 
 rem ---- background auto-update (once per day, silent) ----
@@ -223,7 +223,9 @@ where npm >nul 2>nul
 if errorlevel 1 (echo   [x] npm       : not found) else echo   [v] npm       : installed
 where dsh >nul 2>nul
 if errorlevel 1 (echo   [x] global dsh: not found) else echo   [v] global dsh: installed
-if exist "%BIN%" (echo   [v] local dsh : ready) else echo   [x] local dsh : not installed ^(auto-installs on first run^)
+set "VER="
+if exist "%BIN%" for /f "delims=" %%v in ('call "%BIN%" --version 2^>nul') do set "VER=%%v"
+if exist "%BIN%" (echo   [v] local dsh : ready ^(%VER%^)) else echo   [x] local dsh : not installed ^(auto-installs on first run^)
 where curl >nul 2>nul
 if errorlevel 1 (echo   [-] server    : skipped ^(no curl^)) else (
     curl -s -o nul -m 1 "%URL%/"
