@@ -47,6 +47,7 @@ echo.
 echo First run: installing %APP% locally (needs internet, ~1-3 min)...
 echo Location: %INSTALL_DIR%
 echo.
+call :set_mirror
 call :npm_install
 if errorlevel 1 goto :install_failed
 if not exist "%BIN%" goto :install_failed
@@ -148,8 +149,17 @@ if errorlevel 1 (
 goto :do_install
 
 rem ---- install / update helper ----
+:set_mirror
+rem point npm at the China mirror for faster installs (skip if DSH_OFFICIAL_REGISTRY is set)
+if defined DSH_OFFICIAL_REGISTRY exit /b 0
+call npm config set registry https://registry.npmmirror.com >nul 2>nul
+exit /b 0
+
 :npm_install
 call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit --no-package-lock
+if not errorlevel 1 exit /b 0
+rem mirror failed - retry once with the official registry
+call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit --no-package-lock --registry=https://registry.npmjs.org/
 exit /b %ERRORLEVEL%
 
 rem ---- background auto-update (once per day, silent) ----
@@ -184,6 +194,7 @@ rem ---- update ----
 where node >nul 2>nul
 if errorlevel 1 goto :install_node
 echo Updating %APP%...
+call :set_mirror
 call :npm_install
 if errorlevel 1 (
     echo Update failed. Check your network.

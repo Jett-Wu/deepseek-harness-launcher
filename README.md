@@ -22,6 +22,7 @@
 - 🔄 **Auto-update**: checks for updates once a day in the background (zero startup delay) and upgrades automatically
 - 🛡️ **Clean &amp; safe**: installs only `@deepseek-ai/dsh` from the official npm registry — no third-party binaries, no data collection
 - 🌍 **Universal**: pure-ASCII script, runs on any language edition of Windows 10/11
+- 🚄 **China mirror**: switches npm to the npmmirror registry for fast installs in China, auto-falls back to the official registry
 
 ## 🚀 Quick Start
 
@@ -88,6 +89,11 @@ Delete the script, then delete <code>%LOCALAPPDATA%\DeepSeek-Harness</code> (pre
 Managed by the official dsh program itself; the script doesn't read or upload them.
 </details>
 
+<details>
+<summary><b>Installs are slow or stuck in China - what can I do?</b></summary>
+The script switches npm to the China mirror (<code>registry.npmmirror.com</code>) automatically and falls back to the official registry if that fails. To force the official registry, run with <code>DSH_OFFICIAL_REGISTRY=1</code>.
+</details>
+
 ## 📄 License
 
 [MIT](LICENSE) © 2026 Jett-Wu
@@ -110,6 +116,7 @@ Managed by the official dsh program itself; the script doesn't read or upload th
 - 🔄 **自动更新**：每天后台检查一次更新（完全不拖慢启动），发现新版自动升级
 - 🛡️ **纯净安全**：只从官方 npm registry 安装 `@deepseek-ai/dsh`，无任何第三方二进制、无数据收集
 - 🌍 **通用**：脚本为纯 ASCII，任何语言版本的 Windows 10/11 都能直接运行
+- 🚄 **国内加速**：默认把 npm 切到 npmmirror 国内镜像，国内安装飞快；失败自动回退官方源
 
 ## 🚀 快速开始
 
@@ -174,6 +181,11 @@ Managed by the official dsh program itself; the script doesn't read or upload th
 <details>
 <summary><b>数据和配置存在哪里？</b></summary>
 由官方 dsh 程序自行管理，脚本不参与、不读取、不上传。
+</details>
+
+<details>
+<summary><b>国内安装很慢或卡住怎么办？</b></summary>
+脚本会自动把 npm 切到国内镜像 <code>registry.npmmirror.com</code>，失败时自动回退官方源。想强制使用官方源，可设置环境变量 <code>DSH_OFFICIAL_REGISTRY=1</code> 后运行。
 </details>
 
 ## 📄 License
