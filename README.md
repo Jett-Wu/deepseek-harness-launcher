@@ -1,10 +1,94 @@
-<h1 align="center">🚀 DeepSeek Harness 一键启动器</h1>
+<h1 align="center">🚀 DeepSeek Harness Launcher</h1>
 
 <p align="center">
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
   <a href="#"><img alt="Platform" src="https://img.shields.io/badge/Windows-10%2F11-0078D6.svg"></a>
   <a href="#"><img alt="Source" src="https://img.shields.io/badge/package-official%20npm-brightgreen.svg"></a>
   <br>
+  <b>Download &amp; run · Official package only · Zero config · No third-party code</b>
+</p>
+
+> Double-click `start-dsh.bat` and it sets everything up, then opens the <a href="https://www.npmjs.com/package/@deepseek-ai/dsh">DeepSeek Harness</a> web UI.
+> No third-party desktop wrappers — it installs and runs the official npm package directly: safe, stable, and always up to date.
+
+## ✨ Features
+
+- 🪄 **Zero friction**: no Node.js? it auto-installs via winget; the first run installs the official package, then launches in seconds
+- ⚡ **Fast**: ~1 second to launch after the first install; never starts a second instance if already running
+- 🔄 **Auto-update**: checks for updates once a day in the background (zero startup delay) and upgrades automatically
+- 🛡️ **Clean &amp; safe**: installs only `@deepseek-ai/dsh` from the official npm registry — no third-party binaries, no data collection
+- 🌍 **Universal**: pure-ASCII script, runs on any language edition of Windows 10/11
+
+## 🚀 Quick Start
+
+1. Download `start-dsh.bat`
+2. Double-click it
+3. The first run auto-installs everything (needs internet, ~1–3 min), then opens `http://127.0.0.1:3080`
+
+That's it — every launch after that is one click.
+
+> Tip: pin `start-dsh.bat` to the taskbar or send a desktop shortcut for daily use.
+
+## 📖 Usage
+
+| Action | How |
+|---|---|
+| Start | Double-click `start-dsh.bat` |
+| Update to latest | Run `start-dsh.bat update` in a terminal |
+| Check environment | Run `start-dsh.bat check` in a terminal |
+
+## 🔒 Security
+
+This script exists so you run **the official program, not an untrusted repack**:
+
+- ✅ Sole source: `@deepseek-ai/dsh` from the official npm registry
+- ✅ Never downloads or runs any third-party executable
+- ✅ The entire logic is one `.bat` file you can audit line by line
+- ✅ No data collection — the only network activity is installing/updating the official package
+
+## 🧠 How it works
+
+```
+double-click
+ ├─ already running?      → just open the browser (no duplicate)
+ ├─ locally installed?    → start directly (fastest, ~1 s)
+ ├─ globally installed?   → use the global dsh
+ └─ none of the above?
+     ├─ no Node.js        → winget installs Node.js LTS
+     └─ first-time install of dsh into %LOCALAPPDATA%\DeepSeek-Harness → start
+```
+
+## ❓ FAQ
+
+<details>
+<summary><b>Why is the first launch slow?</b></summary>
+It downloads the official dsh package (~tens of MB). Later launches take ~1 second and need no internet.
+</details>
+
+<details>
+<summary><b>Port 3080 is already in use — what now?</b></summary>
+Close whatever occupies port 3080, or run <code>start-dsh.bat check</code> to inspect.
+</details>
+
+<details>
+<summary><b>How do I fully uninstall?</b></summary>
+Delete the script, then delete <code>%LOCALAPPDATA%\DeepSeek-Harness</code> (press <kbd>Win</kbd>+<kbd>R</kbd> and paste the path).
+</details>
+
+<details>
+<summary><b>Where are my data / config stored?</b></summary>
+Managed by the official dsh program itself; the script doesn't read or upload them.
+</details>
+
+## 📄 License
+
+[MIT](LICENSE) © 2026 Jett-Wu
+
+---
+
+<h1 align="center">🚀 DeepSeek Harness 一键启动器</h1>
+
+<p align="center">
   <b>即下即用 · 只装官方包 · 零配置 · 无第三方代码</b>
 </p>
 
