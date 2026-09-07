@@ -5,6 +5,7 @@ title DeepSeek Harness Launcher
 rem ===========================================================================
 rem  DeepSeek Harness one-click launcher (official npm package @deepseek-ai/dsh)
 rem  Double-click to start | "<name> update" | "<name> check" | "<name> uninstall"
+rem  Uses the npmmirror China registry by default (falls back to official)
 rem ===========================================================================
 
 rem ---- configuration ----
@@ -66,7 +67,7 @@ set "MODE=local"
 goto :run
 
 :use_global
-echo Using global dsh (update with: npm install -g @deepseek-ai/dsh)
+echo Using global dsh (update with: npm install -g @deepseek-ai/dsh --registry=https://registry.npmmirror.com)
 set "MODE=global"
 goto :run
 
@@ -164,10 +165,11 @@ exit /b %ERRORLEVEL%
 
 rem ---- background auto-update (once per day, silent) ----
 :update_check
+for /f "delims=" %%d in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd"') do set "TODAY=%%d"
 set "LAST="
 if exist "%STAMP%" set /p LAST=<"%STAMP%"
-if "%LAST%"=="%date%" exit /b 0
-> "%STAMP%" echo %date%
+if "%LAST%"=="%TODAY%" exit /b 0
+> "%STAMP%" echo %TODAY%
 set "npm_config_fetch_timeout=10000"
 set "npm_config_fetch_retries=1"
 set "REMOTE="
@@ -193,6 +195,7 @@ rem ---- update ----
 :do_update
 where node >nul 2>nul
 if errorlevel 1 goto :install_node
+for /f "delims=" %%d in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd"') do set "TODAY=%%d"
 echo Updating %APP%...
 call :set_mirror
 call :npm_install
@@ -200,7 +203,7 @@ if errorlevel 1 (
     echo Update failed. Check your network.
 ) else (
     echo Updated!
-    > "%STAMP%" echo %date%
+    > "%STAMP%" echo %TODAY%
 )
 goto :done_pause
 
@@ -221,6 +224,8 @@ if exist "%INSTALL_DIR%" (
 :uninstall_done
 echo.
 echo Uninstall finished. Delete this script file if you no longer need it.
+echo Note: npm registry stays on the China mirror. To restore the official
+echo registry, run: npm config set registry https://registry.npmjs.org/
 goto :done_pause
 
 rem ---- diagnose ----
@@ -232,6 +237,9 @@ where node >nul 2>nul
 if errorlevel 1 (echo   [x] Node.js   : not found) else echo   [v] Node.js   : installed
 where npm >nul 2>nul
 if errorlevel 1 (echo   [x] npm       : not found) else echo   [v] npm       : installed
+set "REG="
+for /f "delims=" %%v in ('npm config get registry 2^>nul') do set "REG=%%v"
+if defined REG (echo   [v] registry  : %REG%) else echo   [x] registry  : unknown
 where dsh >nul 2>nul
 if errorlevel 1 (echo   [x] global dsh: not found) else echo   [v] global dsh: installed
 set "VER="

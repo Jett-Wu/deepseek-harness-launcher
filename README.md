@@ -42,6 +42,18 @@ That's it — every launch after that is one click.
 | Update to latest | Run `start-dsh.bat update` in a terminal |
 | Check environment | Run `start-dsh.bat check` in a terminal |
 
+## 🧩 Recommended Plugins
+
+Community-recommended plugins (not officially maintained - install one at a time and check each repo's issues before relying on them):
+
+| Plugin | What it does |
+|---|---|
+| `@linxin666/dsh-web-ui-all` | All-in-one Web UI bundle: task board, git graph, right-side panel (files/terminal/browser), skin center |
+| `@liustack/modsearch` | Adds web search, X search and page fetch to models without web access - free, no API key, automatic engine failover |
+| `dsh-ego-browser` | Gives the agent a built-in browser: semantic clicks, form filling, screenshots |
+| `@kingOfSoySauce/dsh-liang-skin` | A slide-rheostat style skin for the web UI |
+| `dsh-approval-gate` (GitHub repo) | Auto-approval gate: pre-judges risky actions, auto-approves safe ones, routes dangerous ones to human (fail-safe) |
+
 ## 🔒 Security
 
 This script exists so you run **the official program, not an untrusted repack**:
@@ -135,6 +147,18 @@ The script switches npm to the China mirror (<code>registry.npmmirror.com</code>
 | 启动 | 双击 `start-dsh.bat` |
 | 更新到最新版 | 命令行运行 `start-dsh.bat update` |
 | 检查环境 | 命令行运行 `start-dsh.bat check` |
+
+## 🧩 推荐插件
+
+以下插件来自社区推荐（非官方维护，建议逐个安装试用，并留意各自仓库的 issues 了解已知问题）：
+
+| 插件 | 简介 |
+|---|---|
+| `@linxin666/dsh-web-ui-all` | Web UI 全家桶：任务板、Git 图、右侧面板（文件/终端/浏览器）、皮肤中心等一次装齐 |
+| `@liustack/modsearch` | 给没有联网能力的模型补上网页搜索 / X 搜索 / 页面抓取，免注册免 key，多引擎自动切换 |
+| `dsh-ego-browser` | 给 AI 内置一个浏览器：语义定位点击、填表单、截图 |
+| `@kingOfSoySauce/dsh-liang-skin` | 滑动变阻器风格的界面皮肤 |
+| `dsh-approval-gate`（GitHub 仓库） | 自动审批门控：预判风险操作，安全的自动批准、危险的转人工确认（fail-safe） |
 
 ## 🔒 安全说明
 
