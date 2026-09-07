@@ -48,7 +48,7 @@ Community-recommended plugins (not officially maintained - install one at a time
 
 | Plugin | What it does |
 |---|---|
-| `@linxin666/dsh-web-ui-all` | All-in-one Web UI bundle: task board, git graph, right-side panel (files/terminal/browser), skin center |
+| `@linxin666/dsh-web-all` | All-in-one Web UI bundle: task board, git graph, right-side panel (files/terminal/browser), skin center |
 | `@liustack/modsearch` | Adds web search, X search and page fetch to models without web access - free, no API key, automatic engine failover |
 | `dsh-ego-browser` | Gives the agent a built-in browser: semantic clicks, form filling, screenshots |
 | `@kingOfSoySauce/dsh-liang-skin` | A slide-rheostat style skin for the web UI |
@@ -154,7 +154,7 @@ The script switches npm to the China mirror (<code>registry.npmmirror.com</code>
 
 | 插件 | 简介 |
 |---|---|
-| `@linxin666/dsh-web-ui-all` | Web UI 全家桶：任务板、Git 图、右侧面板（文件/终端/浏览器）、皮肤中心等一次装齐 |
+| `@linxin666/dsh-web-all` | Web UI 全家桶：任务板、Git 图、右侧面板（文件/终端/浏览器）、皮肤中心等一次装齐 |
 | `@liustack/modsearch` | 给没有联网能力的模型补上网页搜索 / X 搜索 / 页面抓取，免注册免 key，多引擎自动切换 |
 | `dsh-ego-browser` | 给 AI 内置一个浏览器：语义定位点击、填表单、截图 |
 | `@kingOfSoySauce/dsh-liang-skin` | 滑动变阻器风格的界面皮肤 |
