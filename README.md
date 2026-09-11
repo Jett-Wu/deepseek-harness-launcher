@@ -117,6 +117,14 @@ Node.js <b>22.19.0 or newer</b> - some dsh dependencies require it. The script c
 The script switches npm to the China mirror (<code>registry.npmmirror.com</code>) automatically and falls back to the official registry if that fails. To force the official registry, run with <code>DSH_OFFICIAL_REGISTRY=1</code>.
 </details>
 
+<details>
+<summary><b>Should I remove npm's proxy setting?</b></summary>
+If your <code>.npmrc</code> routes npm through a local proxy (for example <code>proxy=http://127.0.0.1:7890</code>), every update fails whenever that proxy is not running. Since the script already uses the China mirror, a direct connection is faster and more reliable - consider removing it:<br>
+<code>npm config delete proxy</code><br>
+<code>npm config delete https-proxy</code><br>
+If you do need the proxy, just keep it running - <code>start-dsh.bat check</code> shows the current proxy setting and reminds you.
+</details>
+
 ## 📄 License
 
 [MIT](LICENSE) © 2026 Jett-Wu
@@ -232,6 +240,14 @@ The script switches npm to the China mirror (<code>registry.npmmirror.com</code>
 <details>
 <summary><b>国内安装很慢或卡住怎么办？</b></summary>
 脚本会自动把 npm 切到国内镜像 <code>registry.npmmirror.com</code>，失败时自动回退官方源。想强制使用官方源，可设置环境变量 <code>DSH_OFFICIAL_REGISTRY=1</code> 后运行。
+</details>
+
+<details>
+<summary><b>npm 的代理配置要不要去掉？</b></summary>
+如果你的 <code>.npmrc</code> 让 npm 走了本地代理（例如 <code>proxy=http://127.0.0.1:7890</code>），一旦代理没启动，每次更新都会失败。既然脚本已默认使用国内镜像，直连更快也更稳，建议去掉：<br>
+<code>npm config delete proxy</code><br>
+<code>npm config delete https-proxy</code><br>
+如果确实需要代理，保持它常开即可 —— <code>start-dsh.bat check</code> 会显示当前代理配置并给出提醒。
 </details>
 
 ## 📄 License
