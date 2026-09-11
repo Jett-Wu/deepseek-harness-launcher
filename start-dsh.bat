@@ -6,6 +6,7 @@ rem ===========================================================================
 rem  DeepSeek Harness one-click launcher (official npm package @deepseek-ai/dsh)
 rem  Double-click to start | "<name> update" | "<name> check" | "<name> uninstall"
 rem  Uses the npmmirror China registry by default (falls back to official)
+rem  Self-heals: a failed update or a Node.js upgrade triggers an auto rebuild
 rem ===========================================================================
 
 rem ---- configuration ----
@@ -15,6 +16,10 @@ set "APP=DeepSeek Harness"
 set "INSTALL_DIR=%LOCALAPPDATA%\DeepSeek-Harness"
 set "BIN=%INSTALL_DIR%\node_modules\.bin\dsh.cmd"
 set "STAMP=%INSTALL_DIR%\.dsh-last-check"
+set "LOGDIR=%INSTALL_DIR%\logs"
+set "LOGF=%LOGDIR%\install.log"
+set "BROKEN=%INSTALL_DIR%\.install-failed"
+set "NODEFILE=%INSTALL_DIR%\.node-version"
 
 rem ---- speed up npm / npx ----
 set "npm_config_update_notifier=false"
@@ -30,7 +35,7 @@ if /i "%~1"=="uninstall"    goto :do_uninstall
 rem ---- main: reuse / detect / install ----
 curl -s -o nul -m 1 "%URL%/" 2>nul && goto :already_running
 
-if exist "%BIN%" goto :use_local
+if exist "%BIN%" goto :check_local
 where dsh >nul 2>nul
 if not errorlevel 1 goto :use_global
 
@@ -42,6 +47,16 @@ if errorlevel 1 (
     goto :bail
 )
 
+rem ---- local install health check (repair if a previous update failed or Node.js changed) ----
+:check_local
+if exist "%BROKEN%" goto :do_repair
+set "NODEVER="
+for /f "delims=" %%v in ('node -v 2^>nul') do set "NODEVER=%%v"
+set "OLDNODE="
+if exist "%NODEFILE%" set /p OLDNODE=<"%NODEFILE%"
+if defined OLDNODE if defined NODEVER if not "%OLDNODE%"=="%NODEVER%" goto :do_repair
+goto :use_local
+
 rem ---- first-run install ----
 :do_install
 echo.
@@ -52,12 +67,40 @@ call :set_mirror
 call :npm_install
 if errorlevel 1 goto :install_failed
 if not exist "%BIN%" goto :install_failed
+call :save_node_ver
 echo Installed! Future launches are faster.
 goto :use_local
 
 :install_failed
 echo.
 echo [notice] Auto-install failed; using npx instead (slower start, same features).
+goto :use_npx
+
+rem ---- repair a broken local install ----
+:do_repair
+echo.
+echo [repair] The local install needs a rebuild (an update failed, or Node.js changed).
+echo.
+if exist "%BROKEN%" del "%BROKEN%" >nul 2>nul
+call :npm_install
+if errorlevel 1 (
+    echo [repair] First attempt failed - cleaning node_modules and retrying ^(may take a few minutes^)...
+    if exist "%INSTALL_DIR%\node_modules" rmdir /s /q "%INSTALL_DIR%\node_modules"
+    call :npm_install
+)
+if errorlevel 1 goto :repair_failed
+call :save_node_ver
+call "%BIN%" --version >nul 2>nul
+if errorlevel 1 goto :repair_failed
+echo [repair] Repaired successfully.
+echo.
+goto :use_local
+
+:repair_failed
+echo.
+echo [repair] Could not repair the local install. Details: %LOGF%
+echo   If npm blocked package install scripts, try: npm install-scripts approve --all
+echo   Run "%~nx0 check" for environment info. Falling back to npx for now.
 goto :use_npx
 
 rem ---- run mode selection ----
@@ -157,11 +200,24 @@ call npm config set registry https://registry.npmmirror.com >nul 2>nul
 exit /b 0
 
 :npm_install
+if not exist "%LOGDIR%" mkdir "%LOGDIR%" >nul 2>nul
+set "npm_config_logs_dir=%LOGDIR%"
 call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit --no-package-lock
-if not errorlevel 1 exit /b 0
+if not errorlevel 1 goto :install_ok
 rem mirror failed - retry once with the official registry
 call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit --no-package-lock --registry=https://registry.npmjs.org/
-exit /b %ERRORLEVEL%
+if not errorlevel 1 goto :install_ok
+rem both attempts failed - mark for repair on the next launch
+> "%BROKEN%" echo failed
+exit /b 1
+
+:install_ok
+if exist "%BROKEN%" del "%BROKEN%" >nul 2>nul
+exit /b 0
+
+:save_node_ver
+for /f "delims=" %%v in ('node -v 2^>nul') do > "%NODEFILE%" echo %%v
+exit /b 0
 
 rem ---- background auto-update (once per day, silent) ----
 :update_check
@@ -183,9 +239,11 @@ if "%LOCAL:~0,1%"=="v" set "LOCAL=%LOCAL:~1%"
 if "%REMOTE%"=="%LOCAL%" exit /b 0
 echo.
 echo [update] New version %REMOTE% (current %LOCAL%). Updating in background...
-call :npm_install >nul 2>nul
+if not exist "%LOGDIR%" mkdir "%LOGDIR%" >nul 2>nul
+call :npm_install >> "%LOGF%" 2>&1
 if errorlevel 1 (
-    echo [update] Update failed. Retry later: %~nx0 update
+    echo [update] Update failed - the next launch will repair it automatically.
+    echo [update] Log: %LOGF%
 ) else (
     echo [update] Updated to %REMOTE%. Takes effect on next launch.
 )
@@ -233,18 +291,26 @@ rem ---- diagnose ----
 echo ==========================================
 echo   %APP% environment
 echo ==========================================
-where node >nul 2>nul
-if errorlevel 1 (echo   [x] Node.js   : not found) else echo   [v] Node.js   : installed
-where npm >nul 2>nul
-if errorlevel 1 (echo   [x] npm       : not found) else echo   [v] npm       : installed
+set "NODEVER="
+for /f "delims=" %%v in ('node -v 2^>nul') do set "NODEVER=%%v"
+if defined NODEVER (echo   [v] Node.js   : %NODEVER%) else echo   [x] Node.js   : not found
+set "NPMVER="
+for /f "delims=" %%v in ('npm -v 2^>nul') do set "NPMVER=%%v"
+if defined NPMVER (echo   [v] npm       : %NPMVER%) else echo   [x] npm       : not found
 set "REG="
 for /f "delims=" %%v in ('npm config get registry 2^>nul') do set "REG=%%v"
 if defined REG (echo   [v] registry  : %REG%) else echo   [x] registry  : unknown
+set "PROXY="
+for /f "delims=" %%v in ('npm config get proxy 2^>nul') do set "PROXY=%%v"
+if "%PROXY%"=="null" set "PROXY="
+if defined PROXY (echo   [!] proxy     : %PROXY%  ^(make sure it is running^)) else echo   [-] proxy     : not set
 where dsh >nul 2>nul
 if errorlevel 1 (echo   [x] global dsh: not found) else echo   [v] global dsh: installed
 set "VER="
 if exist "%BIN%" for /f "delims=" %%v in ('call "%BIN%" --version 2^>nul') do set "VER=%%v"
 if exist "%BIN%" (echo   [v] local dsh : ready ^(%VER%^)) else echo   [x] local dsh : not installed ^(auto-installs on first run^)
+if exist "%BROKEN%" echo   [!] last install: FAILED - the next launch will repair it
+if exist "%LOGF%" echo   [i] install log : %LOGF%
 where curl >nul 2>nul
 if errorlevel 1 (echo   [-] server    : skipped ^(no curl^)) else (
     curl -s -o nul -m 1 "%URL%/"

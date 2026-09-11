@@ -23,6 +23,7 @@
 - 🛡️ **Clean &amp; safe**: installs only `@deepseek-ai/dsh` from the official npm registry — no third-party binaries, no data collection
 - 🌍 **Universal**: pure-ASCII script, runs on any language edition of Windows 10/11
 - 🚄 **China mirror**: switches npm to the npmmirror registry for fast installs in China, auto-falls back to the official registry
+- 🛠️ **Self-healing**: if an update fails or Node.js is upgraded, the next launch rebuilds the local install automatically
 
 ## 🚀 Quick Start
 
@@ -102,6 +103,11 @@ Managed by the official dsh program itself; the script doesn't read or upload th
 </details>
 
 <details>
+<summary><b>An update failed and the app no longer starts - what now?</b></summary>
+Just launch it again: the script detects the broken install and rebuilds automatically. Logs are kept in <code>%LOCALAPPDATA%\DeepSeek-Harness\logs</code>. Run <code>start-dsh.bat check</code> to inspect Node.js/npm versions and the npm proxy setting.
+</details>
+
+<details>
 <summary><b>Installs are slow or stuck in China - what can I do?</b></summary>
 The script switches npm to the China mirror (<code>registry.npmmirror.com</code>) automatically and falls back to the official registry if that fails. To force the official registry, run with <code>DSH_OFFICIAL_REGISTRY=1</code>.
 </details>
@@ -129,6 +135,7 @@ The script switches npm to the China mirror (<code>registry.npmmirror.com</code>
 - 🛡️ **纯净安全**：只从官方 npm registry 安装 `@deepseek-ai/dsh`，无任何第三方二进制、无数据收集
 - 🌍 **通用**：脚本为纯 ASCII，任何语言版本的 Windows 10/11 都能直接运行
 - 🚄 **国内加速**：默认把 npm 切到 npmmirror 国内镜像，国内安装飞快；失败自动回退官方源
+- 🛠️ **自动修复**：更新失败或 Node.js 升级后，下次启动会自动重建本地安装
 
 ## 🚀 快速开始
 
@@ -205,6 +212,11 @@ The script switches npm to the China mirror (<code>registry.npmmirror.com</code>
 <details>
 <summary><b>数据和配置存在哪里？</b></summary>
 由官方 dsh 程序自行管理，脚本不参与、不读取、不上传。
+</details>
+
+<details>
+<summary><b>更新失败后用不了了怎么办？</b></summary>
+再启动一次即可：脚本会检测到安装损坏并自动重建。日志保存在 <code>%LOCALAPPDATA%\DeepSeek-Harness\logs</code>；运行 <code>start-dsh.bat check</code> 可以查看 Node.js / npm 版本和 npm 代理设置。
 </details>
 
 <details>
