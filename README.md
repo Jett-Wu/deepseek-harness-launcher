@@ -108,6 +108,11 @@ Just launch it again: the script detects the broken install and rebuilds automat
 </details>
 
 <details>
+<summary><b>Which Node.js version do I need?</b></summary>
+Node.js <b>22.19.0 or newer</b> - some dsh dependencies require it. The script checks this on every launch and warns you if your version is too old.
+</details>
+
+<details>
 <summary><b>Installs are slow or stuck in China - what can I do?</b></summary>
 The script switches npm to the China mirror (<code>registry.npmmirror.com</code>) automatically and falls back to the official registry if that fails. To force the official registry, run with <code>DSH_OFFICIAL_REGISTRY=1</code>.
 </details>
@@ -217,6 +222,11 @@ The script switches npm to the China mirror (<code>registry.npmmirror.com</code>
 <details>
 <summary><b>更新失败后用不了了怎么办？</b></summary>
 再启动一次即可：脚本会检测到安装损坏并自动重建。日志保存在 <code>%LOCALAPPDATA%\DeepSeek-Harness\logs</code>；运行 <code>start-dsh.bat check</code> 可以查看 Node.js / npm 版本和 npm 代理设置。
+</details>
+
+<details>
+<summary><b>需要什么版本的 Node.js？</b></summary>
+需要 Node.js <b>22.19.0 或更新</b>（dsh 的部分依赖有此要求）。脚本每次启动都会检查，版本过低时会给出提示。
 </details>
 
 <details>

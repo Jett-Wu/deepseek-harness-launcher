@@ -20,6 +20,8 @@ set "LOGDIR=%INSTALL_DIR%\logs"
 set "LOGF=%LOGDIR%\install.log"
 set "BROKEN=%INSTALL_DIR%\.install-failed"
 set "NODEFILE=%INSTALL_DIR%\.node-version"
+rem minimum Node.js required by dsh dependencies (undici / pi-ai / pi-telemetry)
+set "MIN_NODE=22.19.0"
 
 rem ---- speed up npm / npx ----
 set "npm_config_update_notifier=false"
@@ -52,6 +54,13 @@ rem ---- local install health check (repair if a previous update failed or Node.
 if exist "%BROKEN%" goto :do_repair
 set "NODEVER="
 for /f "delims=" %%v in ('node -v 2^>nul') do set "NODEVER=%%v"
+call :check_node_ver
+if errorlevel 1 (
+    echo.
+    echo [warning] Node.js %NODEVER% is older than %MIN_NODE%, which some packages require.
+    echo   If installs keep failing, upgrade Node.js LTS: https://nodejs.org/
+    echo.
+)
 set "OLDNODE="
 if exist "%NODEFILE%" set /p OLDNODE=<"%NODEFILE%"
 if defined OLDNODE if defined NODEVER if not "%OLDNODE%"=="%NODEVER%" goto :do_repair
@@ -219,6 +228,30 @@ exit /b 0
 for /f "delims=" %%v in ('node -v 2^>nul') do > "%NODEFILE%" echo %%v
 exit /b 0
 
+:check_node_ver
+rem returns 0 when Node.js satisfies MIN_NODE
+set "NMAJOR="
+set "NMINOR="
+for /f "tokens=1,2 delims=." %%a in ('node -v 2^>nul') do (
+    set "NMAJOR=%%a"
+    set "NMINOR=%%b"
+)
+if not defined NMAJOR exit /b 1
+set "NMAJOR=%NMAJOR:v=%"
+set "MMAJOR="
+set "MMINOR="
+for /f "tokens=1,2 delims=." %%a in ("%MIN_NODE%") do (
+    set "MMAJOR=%%a"
+    set "MMINOR=%%b"
+)
+if not defined MMAJOR exit /b 0
+if %NMAJOR% LSS %MMAJOR% exit /b 1
+if %NMAJOR% GTR %MMAJOR% exit /b 0
+if not defined NMINOR exit /b 1
+if not defined MMINOR exit /b 0
+if %NMINOR% LSS %MMINOR% exit /b 1
+exit /b 0
+
 rem ---- background auto-update (once per day, silent) ----
 :update_check
 for /f "delims=" %%d in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd"') do set "TODAY=%%d"
@@ -293,7 +326,8 @@ echo   %APP% environment
 echo ==========================================
 set "NODEVER="
 for /f "delims=" %%v in ('node -v 2^>nul') do set "NODEVER=%%v"
-if defined NODEVER (echo   [v] Node.js   : %NODEVER%) else echo   [x] Node.js   : not found
+call :check_node_ver
+if not defined NODEVER (echo   [x] Node.js   : not found) else if errorlevel 1 (echo   [!] Node.js   : %NODEVER%  ^(needs %MIN_NODE%+^)) else echo   [v] Node.js   : %NODEVER%
 set "NPMVER="
 for /f "delims=" %%v in ('npm -v 2^>nul') do set "NPMVER=%%v"
 if defined NPMVER (echo   [v] npm       : %NPMVER%) else echo   [x] npm       : not found
