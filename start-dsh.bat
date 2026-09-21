@@ -219,19 +219,10 @@ exit /b 1
 
 :install_ok
 if exist "%BROKEN%" del "%BROKEN%" >nul 2>nul
-call :approve_scripts
 exit /b 0
 
 :save_node_ver
 for /f "delims=" %%v in ('node -v 2^>nul') do > "%NODEFILE%" echo %%v
-exit /b 0
-
-:approve_scripts
-rem npm 11.18+ blocks install scripts by default; grant them so native modules build
-rem (older npm has no install-scripts command; the call fails and is ignored)
-pushd "%INSTALL_DIR%" 2>nul || exit /b 0
-call npm install-scripts approve --all --no-allow-scripts-pin >nul 2>nul
-popd
 exit /b 0
 
 :check_node_ver

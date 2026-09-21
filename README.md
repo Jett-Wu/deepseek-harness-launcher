@@ -63,7 +63,6 @@ This script exists so you run **the official program, not an untrusted repack**:
 - ✅ Never downloads or runs any third-party executable
 - ✅ The entire logic is one `.bat` file you can audit line by line
 - ✅ No data collection — the only network activity is installing/updating the official package
-- ✅ Grants npm install-script permission only to dsh's own dependency packages (required so native modules build), and writes it into the local install folder only
 
 ## ⚠️ Disclaimer
 
@@ -189,7 +188,6 @@ If you do need the proxy, just keep it running - <code>start-dsh.bat check</code
 - ✅ 不下载、不执行任何第三方可执行文件
 - ✅ 全部逻辑就是一个 `.bat` 文件，可逐行审计
 - ✅ 不收集任何数据，唯一联网行为是安装/更新官方包本身
-- ✅ 仅为 dsh 自身的依赖包授予 npm 安装脚本许可（原生模块构建所需），且只写入本地安装目录
 
 ## ⚠️ 免责声明
 
