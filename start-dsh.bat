@@ -15,24 +15,102 @@ set "URL=http://127.0.0.1:%PORT%"
 set "APP=DeepSeek Harness"
 set "INSTALL_DIR=%LOCALAPPDATA%\DeepSeek-Harness"
 set "BIN=%INSTALL_DIR%\node_modules\.bin\dsh.cmd"
-set "STAMP=%INSTALL_DIR%\.dsh-last-check"
 set "LOGDIR=%INSTALL_DIR%\logs"
 set "LOGF=%LOGDIR%\install.log"
 set "BROKEN=%INSTALL_DIR%\.install-failed"
 set "NODEFILE=%INSTALL_DIR%\.node-version"
+set "AVAILF=%INSTALL_DIR%\.update-available"
 rem minimum Node.js required by dsh dependencies (undici / pi-ai / pi-telemetry)
 set "MIN_NODE=22.19.0"
+rem The update probe runs on every launch (read-only - nothing is installed
+rem automatically). A release is only offered once it is at least MIN_AGE_DAYS old:
+rem dsh ships about every 1.8 days and its "latest" is an rc, so this skips the
+rem freshest build and lets early bugs surface before you are told about it.
+set "MIN_AGE_DAYS=2"
+rem remind when the newest backup is older than N days
+set "BACKUP_DAYS=7"
+
+rem ---- locate the optional dsh-backup helper (sessions + plugins) ----
+set "BACKUP_PS1="
+if defined DSH_BACKUP_PS1 if exist "%DSH_BACKUP_PS1%" set "BACKUP_PS1=%DSH_BACKUP_PS1%"
+if not defined BACKUP_PS1 if exist "%~dp0dsh-backup\dsh-backup.ps1" set "BACKUP_PS1=%~dp0dsh-backup\dsh-backup.ps1"
+if not defined BACKUP_PS1 if exist "%~dp0dsh-backup.ps1" set "BACKUP_PS1=%~dp0dsh-backup.ps1"
+if not defined BACKUP_PS1 if exist "D:\dsh-backup\dsh-backup.ps1" set "BACKUP_PS1=D:\dsh-backup\dsh-backup.ps1"
+set "BACKUP_DIR="
+if defined BACKUP_PS1 for %%f in ("%BACKUP_PS1%") do set "BACKUP_DIR=%%~dpf"
+if defined BACKUP_DIR if "%BACKUP_DIR:~-1%"=="\" set "BACKUP_DIR=%BACKUP_DIR:~0,-1%"
 
 rem ---- speed up npm / npx ----
 set "npm_config_update_notifier=false"
 set "npm_config_fund=false"
 set "npm_config_audit=false"
 
-rem ---- subcommands ----
+rem ---- subcommands (command line) ----
 if /i "%~1"=="check"        goto :check_env
 if /i "%~1"=="update"       goto :do_update
 if /i "%~1"=="update-check" goto :update_check
 if /i "%~1"=="uninstall"    goto :do_uninstall
+if /i "%~1"=="backup"       goto :do_backup
+if /i "%~1"=="diagnose"     goto :do_diagnose
+if /i "%~1"=="repair"       goto :do_repair
+if /i "%~1"=="start"        goto :main
+
+rem ---- no arguments (double-click): show the menu ----
+if "%~1"=="" goto :menu
+
+rem ---- interactive menu ----
+:menu
+echo ==========================================
+echo   %APP% Launcher
+echo ==========================================
+call :show_status
+echo.
+echo   [1] Start                    (default - just press Enter)
+echo   [2] Update now
+echo   [3] Backup sessions + plugins
+echo   [4] Diagnose / Repair
+echo   [5] Uninstall
+echo   [0] Exit
+echo.
+set "PICK="
+set /p "PICK=Choose [1]: "
+if not defined PICK set "PICK=1"
+if "%PICK%"=="1" goto :main
+if "%PICK%"=="2" goto :do_update
+if "%PICK%"=="3" goto :do_backup
+if "%PICK%"=="4" goto :do_diagnose
+if "%PICK%"=="5" goto :do_uninstall
+if "%PICK%"=="0" goto :menu_exit
+echo.
+echo   Invalid choice: "%PICK%"
+timeout /t 2 >nul
+goto :menu
+
+:menu_exit
+exit /b 0
+
+:show_status
+set "AVAIL="
+if exist "%AVAILF%" set /p AVAIL=<"%AVAILF%"
+if defined AVAIL echo   update   : %AVAIL% available - press 2 to install
+if not defined AVAIL echo   update   : up to date ^(checked on every launch^)
+set "SNAP="
+if defined BACKUP_DIR if exist "%BACKUP_DIR%\snapshots" for /f "delims=" %%d in ('dir /b /ad /o-d "%BACKUP_DIR%\snapshots" 2^>nul') do if not defined SNAP set "SNAP=%%d"
+if not defined SNAP goto :status_none
+set "BK_OLD="
+for /f "delims=" %%f in ('forfiles /p "%BACKUP_DIR%\snapshots" /m "%SNAP%" /d -%BACKUP_DAYS% /c "cmd /c echo @file" 2^>nul') do set "BK_OLD=1"
+if defined BK_OLD goto :status_old
+echo   last backup: %SNAP%
+exit /b 0
+:status_old
+echo   last backup: %SNAP%  ^(over %BACKUP_DAYS% days old - press 3 to back up^)
+exit /b 0
+:status_none
+echo   last backup: none yet  ^(press 3 to back up^)
+exit /b 0
+
+rem ---- main: reuse / detect / install ----
+:main
 
 rem ---- main: reuse / detect / install ----
 curl -s -o nul -m 1 "%URL%/" 2>nul && goto :already_running
@@ -219,6 +297,7 @@ exit /b 1
 
 :install_ok
 if exist "%BROKEN%" del "%BROKEN%" >nul 2>nul
+if exist "%AVAILF%" del "%AVAILF%" >nul 2>nul
 exit /b 0
 
 :save_node_ver
@@ -253,11 +332,7 @@ exit /b 0
 
 rem ---- background auto-update (once per day, silent) ----
 :update_check
-for /f "delims=" %%d in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd"') do set "TODAY=%%d"
-set "LAST="
-if exist "%STAMP%" set /p LAST=<"%STAMP%"
-if "%LAST%"=="%TODAY%" exit /b 0
-> "%STAMP%" echo %TODAY%
+rem probe on every launch - read-only, nothing gets installed automatically
 set "npm_config_fetch_timeout=10000"
 set "npm_config_fetch_retries=1"
 set "REMOTE="
@@ -268,33 +343,84 @@ for /f "delims=" %%v in ('call "%BIN%" --version 2^>nul') do set "LOCAL=%%v"
 if not defined LOCAL exit /b 0
 if "%REMOTE:~0,1%"=="v" set "REMOTE=%REMOTE:~1%"
 if "%LOCAL:~0,1%"=="v" set "LOCAL=%LOCAL:~1%"
-if "%REMOTE%"=="%LOCAL%" exit /b 0
+if not "%REMOTE%"=="%LOCAL%" goto :uc_newer
+if exist "%AVAILF%" del "%AVAILF%" >nul 2>nul
+exit /b 0
+
+:uc_newer
+rem delayed adoption: only mention a release at least MIN_AGE_DAYS days old
+set "PUB="
+for /f "delims=" %%d in ('npm view @deepseek-ai/dsh time.%REMOTE% --no-fund --no-audit 2^>nul') do set "PUB=%%d"
+set "AGE="
+if defined PUB for /f "delims=" %%a in ('powershell -NoProfile -Command "if($env:PUB){[int]((Get-Date).ToUniversalTime()-[datetime]::Parse($env:PUB).ToUniversalTime()).TotalDays}" 2^>nul') do set "AGE=%%a"
+if not defined AGE goto :uc_offer
+if %AGE% LSS %MIN_AGE_DAYS% exit /b 0
+:uc_offer
+rem no silent auto-install: just record it and tell the user
+> "%AVAILF%" echo %REMOTE%
 echo.
-echo [update] New version %REMOTE% (current %LOCAL%). Updating in background...
-if not exist "%LOGDIR%" mkdir "%LOGDIR%" >nul 2>nul
-call :npm_install >> "%LOGF%" 2>&1
-if errorlevel 1 (
-    echo [update] Update failed - the next launch will repair it automatically.
-    echo [update] Log: %LOGF%
-) else (
-    echo [update] Updated to %REMOTE%. Takes effect on next launch.
-)
+echo ============================================================
+echo  Update available: %REMOTE%  ^(you have %LOCAL%^)
+echo  Run "%~nx0 update" to upgrade, or press 2 in the menu.
+echo ============================================================
+echo.
 exit /b 0
 
 rem ---- update ----
 :do_update
 where node >nul 2>nul
 if errorlevel 1 goto :install_node
-for /f "delims=" %%d in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd"') do set "TODAY=%%d"
 echo Updating %APP%...
 call :set_mirror
 call :npm_install
 if errorlevel 1 (
     echo Update failed. Check your network.
+    echo Log: %LOGF%
 ) else (
     echo Updated!
-    > "%STAMP%" echo %TODAY%
 )
+goto :done_pause
+
+rem ---- backup (uses the optional dsh-backup helper) ----
+:do_backup
+echo.
+if not defined BACKUP_PS1 goto :backup_missing
+echo [backup] Backing up DSH sessions and plugins - takes about 8 seconds...
+echo.
+powershell -NoProfile -ExecutionPolicy Bypass -File "%BACKUP_PS1%"
+echo.
+if errorlevel 1 (
+    echo [backup] Finished with warnings - review the output above.
+) else (
+    echo [backup] Done.
+)
+goto :done_pause
+
+:backup_missing
+echo [backup] Backup helper not found. Looked for:
+echo   %~dp0dsh-backup\dsh-backup.ps1
+echo   %~dp0dsh-backup.ps1
+echo   D:\dsh-backup\dsh-backup.ps1
+echo   Set DSH_BACKUP_PS1 to its full path if it lives elsewhere.
+goto :done_pause
+
+rem ---- diagnose, with optional repair ----
+:do_diagnose
+call :show_env
+set "NEEDFIX="
+if exist "%BROKEN%" set "NEEDFIX=1"
+if not exist "%BIN%" set "NEEDFIX=1"
+if exist "%BIN%" call "%BIN%" --version >nul 2>nul
+if errorlevel 1 set "NEEDFIX=1"
+echo.
+if not defined NEEDFIX goto :diag_ok
+echo   [!] The local install looks unhealthy.
+set "FIXNOW="
+set /p "FIXNOW=Repair it now? [y/N]: "
+if /i "%FIXNOW%"=="y" goto :do_repair
+goto :done_pause
+:diag_ok
+echo   Looks healthy.
 goto :done_pause
 
 rem ---- uninstall ----
@@ -320,6 +446,12 @@ goto :done_pause
 
 rem ---- diagnose ----
 :check_env
+call :show_env
+echo.
+pause
+exit /b 0
+
+:show_env
 echo ==========================================
 echo   %APP% environment
 echo ==========================================
@@ -354,8 +486,6 @@ if errorlevel 1 (echo   [-] server    : skipped ^(no curl^)) else (
     curl -s -o nul -m 1 "%URL%/"
     if errorlevel 1 (echo   [x] server    : not running) else echo   [v] server    : running at %URL%
 )
-echo.
-pause
 exit /b 0
 
 rem ---- done ----

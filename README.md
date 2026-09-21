@@ -19,7 +19,8 @@
 
 - 🪄 **Zero friction**: no Node.js? it auto-installs via winget; the first run installs the official package, then launches in seconds
 - ⚡ **Fast**: ~1 second to launch after the first install; never starts a second instance if already running
-- 🔄 **Auto-update**: checks for updates once a day in the background (zero startup delay) and upgrades automatically
+- 🔄 **Update notice**: probes for new releases on every launch in the background (zero startup delay) and never installs behind your back - a release is only offered once it has been out for a couple of days
+- 💾 **Optional backup**: if a `dsh-backup` helper sits next to this script (or `DSH_BACKUP_PS1` points at one), menu option 3 backs up sessions and plugins
 - 🛡️ **Clean &amp; safe**: installs only `@deepseek-ai/dsh` from the official npm registry — no third-party binaries, no data collection
 - 🌍 **Universal**: pure-ASCII script, runs on any language edition of Windows 10/11
 - 🚄 **China mirror**: switches npm to the npmmirror registry for fast installs in China, auto-falls back to the official registry
@@ -28,7 +29,7 @@
 ## 🚀 Quick Start
 
 1. Download `start-dsh.bat`
-2. Double-click it
+2. Double-click it and press Enter (menu option 1)
 3. The first run auto-installs everything (needs internet, ~1–3 min), then opens `http://127.0.0.1:3080`
 
 That's it — every launch after that is one click.
@@ -37,11 +38,15 @@ That's it — every launch after that is one click.
 
 ## 📖 Usage
 
-| Action | How |
-|---|---|
-| Start | Double-click `start-dsh.bat` |
-| Update to latest | Run `start-dsh.bat update` in a terminal |
-| Check environment | Run `start-dsh.bat check` in a terminal |
+Double-click `start-dsh.bat` for a menu - just press Enter to start.
+
+| Menu | Action | Command line |
+|---|---|---|
+| 1 | Start DSH (default) | `start-dsh.bat start` |
+| 2 | Update to the latest release | `start-dsh.bat update` |
+| 3 | Back up sessions and plugins | `start-dsh.bat backup` |
+| 4 | Diagnose, with optional repair | `start-dsh.bat diagnose` |
+| 5 | Uninstall | `start-dsh.bat uninstall` |
 
 ## 🧩 Recommended Plugins
 
@@ -144,7 +149,8 @@ If you do need the proxy, just keep it running - <code>start-dsh.bat check</code
 
 - 🪄 **零门槛**：没有 Node.js？自动用 winget 安装；首次运行自动装官方包，之后双击秒开
 - ⚡ **快**：首次安装后启动约 1 秒；重复双击不会启动第二个实例，直接打开浏览器
-- 🔄 **自动更新**：每天后台检查一次更新（完全不拖慢启动），发现新版自动升级
+- 🔄 **更新提醒**：每次启动都在后台检查新版本（零延迟），只提醒、绝不擅自安装；且只提醒已发布几天的版本
+- 💾 **可选备份**：如果脚本旁边有 `dsh-backup` 工具（或设置了 `DSH_BACKUP_PS1`），菜单选项 3 可备份聊天记录与插件
 - 🛡️ **纯净安全**：只从官方 npm registry 安装 `@deepseek-ai/dsh`，无任何第三方二进制、无数据收集
 - 🌍 **通用**：脚本为纯 ASCII，任何语言版本的 Windows 10/11 都能直接运行
 - 🚄 **国内加速**：默认把 npm 切到 npmmirror 国内镜像，国内安装飞快；失败自动回退官方源
@@ -153,7 +159,7 @@ If you do need the proxy, just keep it running - <code>start-dsh.bat check</code
 ## 🚀 快速开始
 
 1. 下载 `start-dsh.bat`
-2. 双击运行
+2. 双击后按回车（菜单选项 1）
 3. 首次运行会自动安装（需要联网，约 1~3 分钟），完成后自动打开 `http://127.0.0.1:3080`
 
 就这么简单，之后的每次启动都是一键。
@@ -162,11 +168,15 @@ If you do need the proxy, just keep it running - <code>start-dsh.bat check</code
 
 ## 📖 使用方法
 
-| 操作 | 方法 |
-|---|---|
-| 启动 | 双击 `start-dsh.bat` |
-| 更新到最新版 | 命令行运行 `start-dsh.bat update` |
-| 检查环境 | 命令行运行 `start-dsh.bat check` |
+双击 `start-dsh.bat` 会出现菜单，直接回车即启动。
+
+| 菜单 | 操作 | 命令行 |
+|---|---|---|
+| 1 | 启动 DSH（默认） | `start-dsh.bat start` |
+| 2 | 更新到最新版 | `start-dsh.bat update` |
+| 3 | 备份聊天记录与插件 | `start-dsh.bat backup` |
+| 4 | 环境诊断（可顺带修复） | `start-dsh.bat diagnose` |
+| 5 | 卸载 | `start-dsh.bat uninstall` |
 
 ## 🧩 推荐插件
 
