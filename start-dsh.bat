@@ -69,9 +69,9 @@ echo ==========================================
 call :probe_update
 call :show_status
 echo ------------------------------------------
-echo [1] Start                    [2] Update now
-echo [3] Backup                   [4] Diagnose / Repair
-echo [5] Uninstall                [0] Exit
+echo [1] Start       [2] Update now
+echo [3] Backup      [4] Diagnose / Repair
+echo [5] Uninstall   [0] Exit
 echo ------------------------------------------
 echo.
 choice /c 123450 /n /m "> Choose: "
