@@ -68,15 +68,13 @@ echo   %APP% Launcher
 echo ==========================================
 call :probe_update
 call :show_status
+echo ------------------------------------------
+echo [1] Start                    [2] Update now
+echo [3] Backup                   [4] Diagnose / Repair
+echo [5] Uninstall                [0] Exit
+echo ------------------------------------------
 echo.
-echo   [1] Start
-echo   [2] Update now
-echo   [3] Backup
-echo   [4] Diagnose / Repair
-echo   [5] Uninstall
-echo   [0] Exit
-echo.
-choice /c 123450 /n /m "Choose: "
+choice /c 123450 /n /m "> Choose: "
 set "RC=%ERRORLEVEL%"
 if "%RC%"=="2" goto :do_update
 if "%RC%"=="3" goto :do_backup
@@ -113,13 +111,13 @@ rem ---- menu status lines ----
 if not defined CUR goto :status_nolocal
 if not defined LATEST goto :status_offline
 if "%CUR%"=="%LATEST%" goto :status_current
-echo   update   : yours %CUR%  ^|  latest %LATEST%   ^(update available - press 2^)
+echo   update   : update available   %CUR%  -^>  %LATEST%
 goto :status_backup
 :status_current
-echo   update   : yours %CUR%  ^|  latest %LATEST%   ^(up to date^)
+echo   update   : up to date   ^(%CUR%^)
 goto :status_backup
 :status_offline
-echo   update   : yours %CUR%  ^|  latest unknown   ^(check failed - offline?^)
+echo   update   : %CUR%   ^(version check failed - offline?^)
 goto :status_backup
 :status_nolocal
 echo   update   : not installed yet
@@ -245,7 +243,7 @@ goto :run
 rem ---- run ----
 :run
 echo.
-echo Starting %APP% - the browser opens automatically.
+echo Starting %APP% ^(loading, the browser opens when ready^)...
 echo Page: %URL%   ^(close this window to stop^)
 echo.
 rem dsh opens the browser itself once the server is listening (see: dsh web --no-open)
