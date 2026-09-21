@@ -22,13 +22,16 @@ set "NODEFILE=%INSTALL_DIR%\.node-version"
 set "AVAILF=%INSTALL_DIR%\.update-available"
 rem minimum Node.js required by dsh dependencies (undici / pi-ai / pi-telemetry)
 set "MIN_NODE=22.19.0"
-rem The update probe runs on every launch (read-only - nothing is installed
-rem automatically). A release is only offered once it is at least MIN_AGE_DAYS old:
-rem dsh ships about every 1.8 days and its "latest" is an rc, so this skips the
-rem freshest build and lets early bugs surface before you are told about it.
-set "MIN_AGE_DAYS=2"
+rem The update probe runs on every menu (read-only - nothing is installed
+rem automatically). Any newer release is reported; when to install is your call.
+rem backup destination: remembered after the first Backup run
+set "BKDESTF=%INSTALL_DIR%\.backup-dest"
+set "BK_DEST="
+if exist "%BKDESTF%" set /p BK_DEST=<"%BKDESTF%"
 rem remind when the newest backup is older than N days
 set "BACKUP_DAYS=7"
+rem how many backup sets to keep (the helper rotates older ones out)
+set "BACKUP_KEEP=15"
 
 rem ---- locate the optional dsh-backup helper (sessions + plugins) ----
 set "BACKUP_PS1="
@@ -63,50 +66,84 @@ rem ---- interactive menu ----
 echo ==========================================
 echo   %APP% Launcher
 echo ==========================================
+call :probe_update
 call :show_status
 echo.
-echo   [1] Start                    (default - just press Enter)
+echo   [1] Start
 echo   [2] Update now
-echo   [3] Backup sessions + plugins
+echo   [3] Backup
 echo   [4] Diagnose / Repair
 echo   [5] Uninstall
 echo   [0] Exit
 echo.
-set "PICK="
-set /p "PICK=Choose [1]: "
-if not defined PICK set "PICK=1"
-if "%PICK%"=="1" goto :main
-if "%PICK%"=="2" goto :do_update
-if "%PICK%"=="3" goto :do_backup
-if "%PICK%"=="4" goto :do_diagnose
-if "%PICK%"=="5" goto :do_uninstall
-if "%PICK%"=="0" goto :menu_exit
+choice /c 123450 /n /m "Choose: "
+set "RC=%ERRORLEVEL%"
 echo.
-echo   Invalid choice: "%PICK%"
-timeout /t 2 >nul
-goto :menu
+if "%RC%"=="2" goto :do_update
+if "%RC%"=="3" goto :do_backup
+if "%RC%"=="4" goto :do_diagnose
+if "%RC%"=="5" goto :do_uninstall
+if "%RC%"=="6" goto :menu_exit
+goto :main
 
 :menu_exit
 exit /b 0
 
+rem ---- update probe: runs before every menu, read-only, never installs ----
+:probe_update
+set "CUR="
+if exist "%BIN%" for /f "delims=" %%v in ('call "%BIN%" --version 2^>nul') do set "CUR=%%v"
+if defined CUR set "CUR=%CUR:v=%"
+set "LATEST="
+set "npm_config_fetch_timeout=8000"
+set "npm_config_fetch_retries=0"
+for /f "delims=" %%v in ('npm view @deepseek-ai/dsh version --no-fund --no-audit 2^>nul') do set "LATEST=%%v"
+if defined LATEST set "LATEST=%LATEST:v=%"
+if not defined LATEST goto :probe_done
+if not defined CUR goto :probe_done
+if not "%CUR%"=="%LATEST%" goto :probe_newer
+if exist "%AVAILF%" del "%AVAILF%" >nul 2>nul
+exit /b 0
+:probe_newer
+> "%AVAILF%" echo %LATEST%
+:probe_done
+exit /b 0
+
+rem ---- menu status lines ----
 :show_status
-set "AVAIL="
-if exist "%AVAILF%" set /p AVAIL=<"%AVAILF%"
-if defined AVAIL echo   update   : %AVAIL% available - press 2 to install
-if not defined AVAIL echo   update   : up to date ^(checked on every launch^)
+if not defined CUR goto :status_nolocal
+if not defined LATEST goto :status_offline
+if "%CUR%"=="%LATEST%" goto :status_current
+echo   update   : yours %CUR%  ^|  latest %LATEST%   ^(update available - press 2^)
+goto :status_backup
+:status_current
+echo   update   : yours %CUR%  ^|  latest %LATEST%   ^(up to date^)
+goto :status_backup
+:status_offline
+echo   update   : yours %CUR%  ^|  latest unknown   ^(check failed - offline?^)
+goto :status_backup
+:status_nolocal
+echo   update   : not installed yet
+:status_backup
+set "BKDIR=%BK_DEST%"
+if not defined BKDIR set "BKDIR=%BACKUP_DIR%"
+if not defined BKDIR goto :status_none
+echo   backup   : %BKDIR%
+set "SNAPDIR=%BKDIR%\snapshots"
+if not exist "%SNAPDIR%" goto :status_none
 set "SNAP="
-if defined BACKUP_DIR if exist "%BACKUP_DIR%\snapshots" for /f "delims=" %%d in ('dir /b /ad /o-d "%BACKUP_DIR%\snapshots" 2^>nul') do if not defined SNAP set "SNAP=%%d"
+for /f "delims=" %%d in ('dir /b /ad /o-d "%SNAPDIR%" 2^>nul') do if not defined SNAP set "SNAP=%%d"
 if not defined SNAP goto :status_none
 set "BK_OLD="
-for /f "delims=" %%f in ('forfiles /p "%BACKUP_DIR%\snapshots" /m "%SNAP%" /d -%BACKUP_DAYS% /c "cmd /c echo @file" 2^>nul') do set "BK_OLD=1"
+for /f "delims=" %%f in ('forfiles /p "%SNAPDIR%" /m "%SNAP%" /d -%BACKUP_DAYS% /c "cmd /c echo @file" 2^>nul') do set "BK_OLD=1"
 if defined BK_OLD goto :status_old
-echo   last backup: %SNAP%
+echo              latest %SNAP%
 exit /b 0
 :status_old
-echo   last backup: %SNAP%  ^(over %BACKUP_DAYS% days old - press 3 to back up^)
+echo              latest %SNAP%  ^(over %BACKUP_DAYS% days old - press 3 to back up^)
 exit /b 0
 :status_none
-echo   last backup: none yet  ^(press 3 to back up^)
+echo              no backups yet
 exit /b 0
 
 rem ---- main: reuse / detect / install ----
@@ -213,7 +250,6 @@ echo.
 echo Starting %APP%... the browser opens automatically when ready.
 echo Page: %URL%    Close this window to stop the service.
 echo.
-if "%MODE%"=="local" start "" /b cmd /c call "%~f0" update-check
 rem dsh opens the browser itself once the server is listening (see: dsh web --no-open)
 if "%MODE%"=="local"  call "%BIN%" web
 if "%MODE%"=="global" call dsh web
@@ -286,10 +322,12 @@ if not exist "%LOGDIR%" mkdir "%LOGDIR%" >nul 2>nul
 rem drop npm debug logs older than 7 days to keep the folder small
 forfiles /p "%LOGDIR%" /m *-debug-0.log /d -7 /c "cmd /c del @path" >nul 2>nul
 set "npm_config_logs_dir=%LOGDIR%"
-call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit --no-package-lock
+rem standard npm install with a lock file: transitive versions stay pinned,
+rem so an update cannot silently pull in a different dependency set
+call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit
 if not errorlevel 1 goto :install_ok
 rem mirror failed - retry once with the official registry
-call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit --no-package-lock --registry=https://registry.npmjs.org/
+call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit --registry=https://registry.npmjs.org/
 if not errorlevel 1 goto :install_ok
 rem both attempts failed - mark for repair on the next launch
 > "%BROKEN%" echo failed
@@ -332,39 +370,19 @@ exit /b 0
 
 rem ---- background auto-update (once per day, silent) ----
 :update_check
-rem probe on every launch - read-only, nothing gets installed automatically
-set "npm_config_fetch_timeout=10000"
-set "npm_config_fetch_retries=1"
-set "REMOTE="
-for /f "delims=" %%v in ('npm view @deepseek-ai/dsh version --no-fund --no-audit 2^>nul') do set "REMOTE=%%v"
-if not defined REMOTE exit /b 0
-set "LOCAL="
-for /f "delims=" %%v in ('call "%BIN%" --version 2^>nul') do set "LOCAL=%%v"
-if not defined LOCAL exit /b 0
-if "%REMOTE:~0,1%"=="v" set "REMOTE=%REMOTE:~1%"
-if "%LOCAL:~0,1%"=="v" set "LOCAL=%LOCAL:~1%"
-if not "%REMOTE%"=="%LOCAL%" goto :uc_newer
-if exist "%AVAILF%" del "%AVAILF%" >nul 2>nul
-exit /b 0
-
-:uc_newer
-rem delayed adoption: only mention a release at least MIN_AGE_DAYS days old
-set "PUB="
-for /f "delims=" %%d in ('npm view @deepseek-ai/dsh time.%REMOTE% --no-fund --no-audit 2^>nul') do set "PUB=%%d"
-set "AGE="
-if defined PUB for /f "delims=" %%a in ('powershell -NoProfile -Command "if($env:PUB){[int]((Get-Date).ToUniversalTime()-[datetime]::Parse($env:PUB).ToUniversalTime()).TotalDays}" 2^>nul') do set "AGE=%%a"
-if not defined AGE goto :uc_offer
-if %AGE% LSS %MIN_AGE_DAYS% exit /b 0
-:uc_offer
-rem no silent auto-install: just record it and tell the user
-> "%AVAILF%" echo %REMOTE%
-echo.
-echo ============================================================
-echo  Update available: %REMOTE%  ^(you have %LOCAL%^)
-echo  Run "%~nx0 update" to upgrade, or press 2 in the menu.
-echo ============================================================
-echo.
-exit /b 0
+rem command line: check and report only - never installs
+call :probe_update
+if not defined LATEST goto :uc_offline
+if "%CUR%"=="%LATEST%" goto :uc_same
+echo Update available: %LATEST%  ^(you have %CUR%^)
+echo Run "%~nx0 update" to install it.
+goto :done_pause
+:uc_same
+echo Already up to date: %LATEST%
+goto :done_pause
+:uc_offline
+echo Could not reach the registry ^(offline?^).
+goto :done_pause
 
 rem ---- update ----
 :do_update
@@ -385,9 +403,23 @@ rem ---- backup (uses the optional dsh-backup helper) ----
 :do_backup
 echo.
 if not defined BACKUP_PS1 goto :backup_missing
-echo [backup] Backing up DSH sessions and plugins - takes about 8 seconds...
+if defined BK_DEST goto :backup_run
+rem first run: ask where backups should live, then remember the answer
+echo No backup folder configured yet.
+if defined BACKUP_DIR echo   Press Enter to accept the default: %BACKUP_DIR%
+set "NEWDEST="
+set /p "NEWDEST=Backup folder: "
+if not defined NEWDEST set "NEWDEST=%BACKUP_DIR%"
+if not defined NEWDEST goto :backup_nodest
+set "BK_DEST=%NEWDEST%"
+> "%BKDESTF%" echo %BK_DEST%
+echo   Saved to %BKDESTF% ^(delete that file to change it later^)
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -File "%BACKUP_PS1%"
+:backup_run
+echo [backup] Backing up to %BK_DEST% - takes about 8 seconds...
+echo.
+rem -Prune rotates old sets out so the folder cannot grow without bound
+powershell -NoProfile -ExecutionPolicy Bypass -File "%BACKUP_PS1%" -Dest "%BK_DEST%" -Prune -Keep %BACKUP_KEEP%
 echo.
 if errorlevel 1 (
     echo [backup] Finished with warnings - review the output above.
@@ -402,6 +434,10 @@ echo   %~dp0dsh-backup\dsh-backup.ps1
 echo   %~dp0dsh-backup.ps1
 echo   D:\dsh-backup\dsh-backup.ps1
 echo   Set DSH_BACKUP_PS1 to its full path if it lives elsewhere.
+goto :done_pause
+
+:backup_nodest
+echo [backup] No backup folder given - nothing was backed up.
 goto :done_pause
 
 rem ---- diagnose, with optional repair ----
@@ -426,10 +462,21 @@ goto :done_pause
 rem ---- uninstall ----
 :do_uninstall
 echo.
-echo Uninstalling %APP%...
+echo This removes the local install only:
+echo   %INSTALL_DIR%
+echo Your chats, sessions and settings in %USERPROFILE%\.dsh are NOT touched.
+echo.
+if not exist "%INSTALL_DIR%" goto :uninstall_done
+rem safety net: refuse to delete anything that is not our own install folder
+echo "%INSTALL_DIR%" | findstr /i /c:"DeepSeek-Harness" >nul
+if errorlevel 1 (
+    echo [error] Unexpected install path - refusing to delete. Nothing was removed.
+    goto :done_pause
+)
+choice /c yn /n /t 10 /d n /m "Remove it? [y/N] "
+if errorlevel 2 goto :uninstall_abort
 curl -s -o nul -m 1 "%URL%/" 2>nul
 if not errorlevel 1 echo   [notice] %APP% appears to be running - close it first for a clean removal.
-if not exist "%INSTALL_DIR%" goto :uninstall_done
 echo   Removing %INSTALL_DIR% ...
 rmdir /s /q "%INSTALL_DIR%"
 if exist "%INSTALL_DIR%" (
@@ -437,6 +484,12 @@ if exist "%INSTALL_DIR%" (
 ) else (
     echo   Removed.
 )
+goto :uninstall_done
+
+:uninstall_abort
+echo   Cancelled - nothing was removed.
+goto :done_pause
+
 :uninstall_done
 echo.
 echo Uninstall finished. Delete this script file if you no longer need it.
