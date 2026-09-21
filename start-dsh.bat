@@ -78,7 +78,6 @@ echo   [0] Exit
 echo.
 choice /c 123450 /n /m "Choose: "
 set "RC=%ERRORLEVEL%"
-echo.
 if "%RC%"=="2" goto :do_update
 if "%RC%"=="3" goto :do_backup
 if "%RC%"=="4" goto :do_diagnose
@@ -229,17 +228,16 @@ goto :use_npx
 
 rem ---- run mode selection ----
 :use_local
-echo Using local dsh (update with: %~nx0 update)
 set "MODE=local"
 goto :run
 
 :use_global
-echo Using global dsh (update with: npm install -g @deepseek-ai/dsh --registry=https://registry.npmmirror.com)
+echo Using global dsh ^(no local install^).
 set "MODE=global"
 goto :run
 
 :use_npx
-echo Using npx (first time needs internet, then cached)
+echo Using npx ^(first run downloads it^).
 set "npm_config_prefer_offline=true"
 set "MODE=npx"
 goto :run
@@ -247,8 +245,8 @@ goto :run
 rem ---- run ----
 :run
 echo.
-echo Starting %APP%... the browser opens automatically when ready.
-echo Page: %URL%    Close this window to stop the service.
+echo Starting %APP% - the browser opens automatically.
+echo Page: %URL%   ^(close this window to stop^)
 echo.
 rem dsh opens the browser itself once the server is listening (see: dsh web --no-open)
 if "%MODE%"=="local"  call "%BIN%" web
