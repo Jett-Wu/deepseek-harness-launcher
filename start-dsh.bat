@@ -126,23 +126,23 @@ echo   update   : not installed yet
 :status_backup
 set "BKDIR=%BK_DEST%"
 if not defined BKDIR set "BKDIR=%BACKUP_DIR%"
-if not defined BKDIR goto :status_none
-echo   backup   : %BKDIR%
-set "SNAPDIR=%BKDIR%\snapshots"
-if not exist "%SNAPDIR%" goto :status_none
+if not defined BKDIR goto :status_nofolder
 set "SNAP="
-for /f "delims=" %%d in ('dir /b /ad /o-d "%SNAPDIR%" 2^>nul') do if not defined SNAP set "SNAP=%%d"
-if not defined SNAP goto :status_none
+if exist "%BKDIR%\snapshots" for /f "delims=" %%d in ('dir /b /ad /o-d "%BKDIR%\snapshots" 2^>nul') do if not defined SNAP set "SNAP=%%d"
+if not defined SNAP goto :status_nosnap
 set "BK_OLD="
-for /f "delims=" %%f in ('forfiles /p "%SNAPDIR%" /m "%SNAP%" /d -%BACKUP_DAYS% /c "cmd /c echo @file" 2^>nul') do set "BK_OLD=1"
+for /f "delims=" %%f in ('forfiles /p "%BKDIR%\snapshots" /m "%SNAP%" /d -%BACKUP_DAYS% /c "cmd /c echo @file" 2^>nul') do set "BK_OLD=1"
 if defined BK_OLD goto :status_old
-echo              latest %SNAP%
+echo   backup   : %BKDIR%   ^(%SNAP%^)
 exit /b 0
 :status_old
-echo              latest %SNAP%  ^(over %BACKUP_DAYS% days old - press 3 to back up^)
+echo   backup   : %BKDIR%   ^(%SNAP% - over %BACKUP_DAYS% days old^)
 exit /b 0
-:status_none
-echo              no backups yet
+:status_nosnap
+echo   backup   : %BKDIR%   ^(no backups yet^)
+exit /b 0
+:status_nofolder
+echo   backup   : not configured
 exit /b 0
 
 rem ---- main: reuse / detect / install ----
