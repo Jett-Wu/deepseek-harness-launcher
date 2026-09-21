@@ -70,9 +70,9 @@ call :probe_update
 call :show_status
 echo ------------------------------------------------------------
 echo.
-echo [1] Start           [2] Update
-echo [3] Backup          [4] Diagnose
-echo [5] Uninstall       [0] Exit
+echo [1] Start              [2] Update
+echo [3] Backup             [4] Diagnose
+echo [5] Uninstall          [0] Exit
 echo.
 choice /c 123450 /n /m "> Choose: "
 set "RC=%ERRORLEVEL%"
