@@ -205,6 +205,8 @@ exit /b 0
 
 :npm_install
 if not exist "%LOGDIR%" mkdir "%LOGDIR%" >nul 2>nul
+rem drop npm debug logs older than 7 days to keep the folder small
+forfiles /p "%LOGDIR%" /m *-debug-0.log /d -7 /c "cmd /c del @path" >nul 2>nul
 set "npm_config_logs_dir=%LOGDIR%"
 call npm install --prefix "%INSTALL_DIR%" @deepseek-ai/dsh@latest --no-fund --no-audit --no-package-lock
 if not errorlevel 1 goto :install_ok
@@ -217,17 +219,28 @@ exit /b 1
 
 :install_ok
 if exist "%BROKEN%" del "%BROKEN%" >nul 2>nul
+call :approve_scripts
 exit /b 0
 
 :save_node_ver
 for /f "delims=" %%v in ('node -v 2^>nul') do > "%NODEFILE%" echo %%v
 exit /b 0
 
+:approve_scripts
+rem npm 11.18+ blocks install scripts by default; grant them so native modules build
+rem (older npm has no install-scripts command; the call fails and is ignored)
+pushd "%INSTALL_DIR%" 2>nul || exit /b 0
+call npm install-scripts approve --all --no-allow-scripts-pin >nul 2>nul
+popd
+exit /b 0
+
 :check_node_ver
-rem returns 0 when Node.js satisfies MIN_NODE
+rem returns 0 when Node.js satisfies MIN_NODE (reuses NODEVER if already set)
+if not defined NODEVER for /f "delims=" %%v in ('node -v 2^>nul') do set "NODEVER=%%v"
+if not defined NODEVER exit /b 1
 set "NMAJOR="
 set "NMINOR="
-for /f "tokens=1,2 delims=." %%a in ('node -v 2^>nul') do (
+for /f "tokens=1,2 delims=." %%a in ("%NODEVER%") do (
     set "NMAJOR=%%a"
     set "NMINOR=%%b"
 )
@@ -338,6 +351,11 @@ if errorlevel 1 (echo   [x] global dsh: not found) else echo   [v] global dsh: i
 set "VER="
 if exist "%BIN%" for /f "delims=" %%v in ('call "%BIN%" --version 2^>nul') do set "VER=%%v"
 if exist "%BIN%" (echo   [v] local dsh : ready ^(%VER%^)) else echo   [x] local dsh : not installed ^(auto-installs on first run^)
+set "LATEST="
+for /f "delims=" %%v in ('npm view @deepseek-ai/dsh version --no-fund --no-audit 2^>nul') do set "LATEST=%%v"
+if not defined LATEST echo   [-] latest    : unknown ^(offline?^)
+if defined VER if defined LATEST if "%LATEST%"=="%VER%" echo   [v] latest    : %LATEST%  ^(up to date^)
+if defined VER if defined LATEST if not "%LATEST%"=="%VER%" echo   [!] latest    : %LATEST%  ^(local %VER% - run "%~nx0 update"^)
 if exist "%BROKEN%" echo   [!] last install: FAILED - the next launch will repair it
 if exist "%LOGF%" echo   [i] install log : %LOGF%
 where curl >nul 2>nul
