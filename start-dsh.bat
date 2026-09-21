@@ -63,16 +63,16 @@ if "%~1"=="" goto :menu
 
 rem ---- interactive menu ----
 :menu
-echo ==========================================
+echo ============================================================
 echo   %APP% Launcher
-echo ==========================================
+echo ============================================================
 call :probe_update
 call :show_status
-echo ------------------------------------------
-echo [1] Start       [2] Update now
-echo [3] Backup      [4] Diagnose / Repair
-echo [5] Uninstall   [0] Exit
-echo ------------------------------------------
+echo ------------------------------------------------------------
+echo.
+echo [1] Start           [2] Update
+echo [3] Backup          [4] Diagnose
+echo [5] Uninstall       [0] Exit
 echo.
 choice /c 123450 /n /m "> Choose: "
 set "RC=%ERRORLEVEL%"
@@ -128,13 +128,15 @@ if not defined BKDIR goto :status_nofolder
 set "SNAP="
 if exist "%BKDIR%\snapshots" for /f "delims=" %%d in ('dir /b /ad /o-d "%BKDIR%\snapshots" 2^>nul') do if not defined SNAP set "SNAP=%%d"
 if not defined SNAP goto :status_nosnap
+set "SNAPDISP=%SNAP%"
+if "%SNAP:~0,4%"=="dsh-" if not "%SNAP:~17,1%"=="" set "SNAPDISP=%SNAP:~4,4%-%SNAP:~8,2%-%SNAP:~10,2%"
 set "BK_OLD="
 for /f "delims=" %%f in ('forfiles /p "%BKDIR%\snapshots" /m "%SNAP%" /d -%BACKUP_DAYS% /c "cmd /c echo @file" 2^>nul') do set "BK_OLD=1"
 if defined BK_OLD goto :status_old
-echo   backup   : %BKDIR%   ^(%SNAP%^)
+echo   backup   : %BKDIR%   ^(%SNAPDISP%^)
 exit /b 0
 :status_old
-echo   backup   : %BKDIR%   ^(%SNAP% - over %BACKUP_DAYS% days old^)
+echo   backup   : %BKDIR%   ^(%SNAPDISP%, over %BACKUP_DAYS% days old^)
 exit /b 0
 :status_nosnap
 echo   backup   : %BKDIR%   ^(no backups yet^)
