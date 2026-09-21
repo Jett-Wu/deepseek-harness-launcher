@@ -136,12 +136,7 @@ echo Starting %APP%... the browser opens automatically when ready.
 echo Page: %URL%    Close this window to stop the service.
 echo.
 if "%MODE%"=="local" start "" /b cmd /c call "%~f0" update-check
-where curl >nul 2>nul
-if not errorlevel 1 (
-    start "" /b cmd /c "curl --retry 120 --retry-delay 1 --retry-connrefused -s -o nul -m 1 %URL%/ && start %URL%"
-) else (
-    start "" powershell -NoProfile -WindowStyle Hidden -Command "$p=%PORT%;$u='%URL%';for($i=0;$i -lt 240;$i++){try{$c=[Net.Sockets.TcpClient]::new();$c.Connect('127.0.0.1',$p);if($c.Connected){Start-Process $u;break}}catch{};Start-Sleep -Milliseconds 250}"
-)
+rem dsh opens the browser itself once the server is listening (see: dsh web --no-open)
 if "%MODE%"=="local"  call "%BIN%" web
 if "%MODE%"=="global" call dsh web
 if "%MODE%"=="npx"    call npx --yes @deepseek-ai/dsh web
