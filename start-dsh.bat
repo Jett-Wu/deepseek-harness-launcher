@@ -414,10 +414,10 @@ set "BK_DEST=%NEWDEST%"
 echo   Saved to %BKDESTF% ^(delete that file to change it later^)
 echo.
 :backup_run
-echo [backup] Backing up to %BK_DEST% - takes about 8 seconds...
+echo [backup] Backing up to %BK_DEST% - please wait...
 echo.
 rem -Prune rotates old sets out so the folder cannot grow without bound
-powershell -NoProfile -ExecutionPolicy Bypass -File "%BACKUP_PS1%" -Dest "%BK_DEST%" -Prune -Keep %BACKUP_KEEP%
+powershell -NoProfile -ExecutionPolicy Bypass -File "%BACKUP_PS1%" -Dest "%BK_DEST%" -Keep %BACKUP_KEEP%
 echo.
 if errorlevel 1 (
     echo [backup] Finished with warnings - review the output above.
