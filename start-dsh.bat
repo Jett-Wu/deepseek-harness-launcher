@@ -33,6 +33,13 @@ set "BACKUP_DAYS=7"
 rem how many backup sets to keep (the helper rotates older ones out)
 set "BACKUP_KEEP=15"
 
+rem plugins live in a dsh profile (managed by pnpm through "dsh plugin");
+rem [2] Update refreshes the profile plugins as well as the dsh package itself
+set "PROFILE=web"
+set "DSHHOME=%DSH_HOME%"
+if not defined DSHHOME set "DSHHOME=%USERPROFILE%\.dsh"
+set "PROFILE_DIR=%DSHHOME%\profiles\%PROFILE%"
+
 rem ---- locate the optional dsh-backup helper (sessions + plugins) ----
 set "BACKUP_PS1="
 if defined DSH_BACKUP_PS1 if exist "%DSH_BACKUP_PS1%" set "BACKUP_PS1=%DSH_BACKUP_PS1%"
@@ -395,7 +402,31 @@ if errorlevel 1 (
 ) else (
     echo Updated!
 )
+call :update_plugins
 goto :done_pause
+
+rem ---- keep the installed plugins current too ----
+:update_plugins
+if not exist "%PROFILE_DIR%\package.json" exit /b 0
+set "DSHCMD="
+if exist "%BIN%" set "DSHCMD=%BIN%"
+if not defined DSHCMD for /f "delims=" %%c in ('where dsh 2^>nul') do if not defined DSHCMD set "DSHCMD=%%c"
+if not defined DSHCMD exit /b 0
+echo.
+echo Updating plugins in profile "%PROFILE%"...
+rem plugins pinned to exact versions need --latest to move at all
+call "%DSHCMD%" plugin --profile %PROFILE% update --latest
+if errorlevel 1 (
+    echo [note] Plugin update reported an error - details above.
+) else (
+    echo Plugins updated - restart %APP% to load them.
+)
+rem plugins installed from git are pinned to a commit; re-resolve them to the tip
+for /f "usebackq delims=" %%g in (`powershell -NoProfile -Command "[regex]::Matches((Get-Content '%PROFILE_DIR%\package.json' -Raw), 'github:[a-zA-Z0-9/_.:-]+').Value" 2^>nul`) do (
+    echo Refreshing %%g ...
+    call "%DSHCMD%" plugin --profile %PROFILE% add "%%g"
+)
+exit /b 0
 
 rem ---- backup (uses the optional dsh-backup helper) ----
 :do_backup

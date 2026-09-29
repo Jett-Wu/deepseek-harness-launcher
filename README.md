@@ -38,7 +38,7 @@ Double-click `start-dsh.bat` for a menu - press a number key, no Enter needed.
 | Menu | Action | Command line |
 |---|---|---|
 | 1 | Start DSH (default) | `start-dsh.bat start` |
-| 2 | Update to the latest release | `start-dsh.bat update` |
+| 2 | Update dsh **and** its plugins | `start-dsh.bat update` |
 | 3 | Back up sessions and plugins | `start-dsh.bat backup` |
 | 4 | Diagnose, with optional repair | `start-dsh.bat diagnose` |
 | 5 | Uninstall | `start-dsh.bat uninstall` |
@@ -163,7 +163,7 @@ If you do need the proxy, just keep it running - <code>start-dsh.bat check</code
 | 菜单 | 操作 | 命令行 |
 |---|---|---|
 | 1 | 启动 DSH（默认） | `start-dsh.bat start` |
-| 2 | 更新到最新版 | `start-dsh.bat update` |
+| 2 | 更新 dsh **与已装插件** | `start-dsh.bat update` |
 | 3 | 备份聊天记录与插件 | `start-dsh.bat backup` |
 | 4 | 环境诊断（可顺带修复） | `start-dsh.bat diagnose` |
 | 5 | 卸载 | `start-dsh.bat uninstall` |
