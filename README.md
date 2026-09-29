@@ -132,6 +132,8 @@ If your <code>.npmrc</code> routes npm through a local proxy (for example <code>
 If you do need the proxy, just keep it running - <code>start-dsh.bat check</code> shows the current proxy setting and reminds you.
 </details>
 
+<details> <summary><b>DSH fails to start with "listen EACCES ... permission denied"</b></summary> That is Windows refusing the port, not another program using it: on Windows <code>EACCES</code> usually means the port falls inside a reserved range (Hyper-V / WSL / WinNAT keep such ranges). Check it with:<br> <code>netstat -ano | findstr :13080</code><br> <code>netsh interface ipv4 show excludedportrange protocol=tcp</code><br> If the port is taken or reserved, change <code>PORT</code> at the top of <code>start-dsh.bat</code> - the script forwards it to DSH via <code>--port</code>, so one edit is enough.
+
 ## 📄 License
 
 [MIT](LICENSE) © 2026 Jett-Wu
@@ -263,6 +265,8 @@ If you do need the proxy, just keep it running - <code>start-dsh.bat check</code
 <code>npm config delete https-proxy</code><br>
 如果确实需要代理，保持它常开即可 —— <code>start-dsh.bat check</code> 会显示当前代理配置并给出提醒。
 </details>
+
+<details> <summary><b>启动报 "listen EACCES ... permission denied" 怎么办？</b></summary> 这是 Windows 拒绝了该端口，而不是别的程序占用。Windows 下 <code>EACCES</code> 通常意味着端口落在系统保留范围内（Hyper-V / WSL / WinNAT 会预留这样的范围）。可用下面两条命令确认：<br> <code>netstat -ano | findstr :13080</code><br> <code>netsh interface ipv4 show excludedportrange protocol=tcp</code><br> 如果端口被占用或落在保留范围里，改 <code>start-dsh.bat</code> 顶部的 <code>PORT</code> 即可 —— 脚本会通过 <code>--port</code> 传给 DSH，改一处全脚本生效。
 
 ## 📄 License
 

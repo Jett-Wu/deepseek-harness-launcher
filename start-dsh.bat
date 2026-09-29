@@ -10,7 +10,7 @@ rem  Self-heals: a failed update or a Node.js upgrade triggers an auto rebuild
 rem ===========================================================================
 
 rem ---- configuration ----
-set "PORT=3080"
+set "PORT=13080"
 set "URL=http://127.0.0.1:%PORT%"
 set "APP=DeepSeek Harness"
 set "INSTALL_DIR=%LOCALAPPDATA%\DeepSeek-Harness"
@@ -249,9 +249,9 @@ echo Starting %APP% ^(loading, the browser opens when ready^)...
 echo Page: %URL%   ^(close this window to stop^)
 echo.
 rem dsh opens the browser itself once the server is listening (see: dsh web --no-open)
-if "%MODE%"=="local"  call "%BIN%" web
-if "%MODE%"=="global" call dsh web
-if "%MODE%"=="npx"    call npx --yes @deepseek-ai/dsh web
+if "%MODE%"=="local"  call "%BIN%" web --port %PORT%
+if "%MODE%"=="global" call dsh web --port %PORT%
+if "%MODE%"=="npx"    call npx --yes @deepseek-ai/dsh web --port %PORT%
 if errorlevel 1 goto :run_failed
 echo.
 echo %APP% stopped.
@@ -260,8 +260,13 @@ goto :done_pause
 :run_failed
 echo.
 echo [error] %APP% exited abnormally (code %ERRORLEVEL%).
-echo   Manual stop (Ctrl+C)? Ignore this. Otherwise: check network, port
-echo   %PORT% in use, or run "%~nx0 update".
+echo   Manual stop (Ctrl+C)? Ignore this.
+echo.
+echo   Most startup failures are about the port. To inspect port %PORT%:
+echo     netstat -ano ^| findstr :%PORT%
+echo     netsh interface ipv4 show excludedportrange protocol=tcp
+echo   If it is taken, or inside a Windows-reserved range ^(EACCES^), change
+echo   PORT at the top of this script - DSH receives it via --port.
 goto :done_pause
 
 :already_running
