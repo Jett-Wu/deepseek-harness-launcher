@@ -261,12 +261,7 @@ goto :done_pause
 echo.
 echo [error] %APP% exited abnormally (code %ERRORLEVEL%).
 echo   Manual stop (Ctrl+C)? Ignore this.
-echo.
-echo   Most startup failures are about the port. To inspect port %PORT%:
-echo     netstat -ano ^| findstr :%PORT%
-echo     netsh interface ipv4 show excludedportrange protocol=tcp
-echo   If it is taken, or inside a Windows-reserved range ^(EACCES^), change
-echo   PORT at the top of this script - DSH receives it via --port.
+echo   Otherwise run "%~nx0 check" to diagnose.
 goto :done_pause
 
 :already_running

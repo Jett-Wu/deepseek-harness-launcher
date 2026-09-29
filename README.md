@@ -17,24 +17,17 @@
 
 ## ✨ Features
 
-- 🪄 **Zero friction**: no Node.js? it auto-installs via winget; the first run installs the official package, then launches in seconds
-- ⚡ **Fast**: ~1 second to launch after the first install; never starts a second instance if already running
-- 🔄 **Update notice**: every time you open the menu it shows your version next to the latest one on npm, and never installs anything behind your back
-- 💾 **Optional backup**: if a `dsh-backup` helper sits next to this script (or `DSH_BACKUP_PS1` points at one), menu option 3 backs up sessions and plugins
-- 🛡️ **Clean &amp; safe**: installs only `@deepseek-ai/dsh` from the official npm registry — no third-party binaries, no data collection
-- 🌍 **Universal**: pure-ASCII script, runs on any language edition of Windows 10/11
-- 🚄 **China mirror**: switches npm to the npmmirror registry for fast installs in China, auto-falls back to the official registry
-- 🛠️ **Self-healing**: if an update fails or Node.js is upgraded, the next launch rebuilds the local install automatically
+- 🪄 **Zero friction**: auto-installs Node.js via winget when missing, then the official package; later launches take ~1 s
+- 🔄 **Updates, never silent**: the menu shows your version against the latest on npm and never installs behind your back; a failed update or a Node.js upgrade rebuilds itself
+- 🚄 **China-friendly**: npmmirror registry by default, auto-falls back to the official one
+- 💾 **Optional backup**: menu option 3 backs up sessions and plugins when a `dsh-backup` helper is present
+- 🛡️ **Safe &amp; universal**: only `@deepseek-ai/dsh` from the official registry, no third-party binaries, no data collection; pure-ASCII script for any Windows 10/11 edition
 
 ## 🚀 Quick Start
 
 1. Download `start-dsh.bat`
 2. Double-click it and press `1` - no Enter needed
-3. The first run auto-installs everything (needs internet, ~1–3 min), then opens `http://127.0.0.1:3080`
-
-That's it — every launch after that is one click.
-
-> Tip: pin `start-dsh.bat` to the taskbar or send a desktop shortcut for daily use.
+3. First run auto-installs everything (internet, ~1-3 min), then opens `http://127.0.0.1:13080`
 
 ## 📖 Usage
 
@@ -66,10 +59,9 @@ Community-recommended plugins (not officially maintained - install one at a time
 
 This script exists so you run **the official program, not an untrusted repack**:
 
-- ✅ Sole source: `@deepseek-ai/dsh` from the official npm registry
-- ✅ Never downloads or runs any third-party executable
-- ✅ The entire logic is one `.bat` file you can audit line by line
-- ✅ No data collection — the only network activity is installing/updating the official package
+- ✅ Sole source: `@deepseek-ai/dsh` from the official npm registry, no third-party binaries
+- ✅ One `.bat` file you can audit line by line, no obfuscation
+- ✅ No data collection; the only network activity is installing or updating that package
 
 ## ⚠️ Disclaimer
 
@@ -95,8 +87,8 @@ It downloads the official dsh package (~tens of MB). Later launches take ~1 seco
 </details>
 
 <details>
-<summary><b>Port 3080 is already in use — what now?</b></summary>
-Close whatever occupies port 3080, or run <code>start-dsh.bat check</code> to inspect.
+<summary><b>Port 13080 is already in use — what now?</b></summary>
+Close whatever occupies that port, or change <code>PORT</code> at the top of <code>start-dsh.bat</code>.
 </details>
 
 <details>
@@ -132,7 +124,6 @@ If your <code>.npmrc</code> routes npm through a local proxy (for example <code>
 If you do need the proxy, just keep it running - <code>start-dsh.bat check</code> shows the current proxy setting and reminds you.
 </details>
 
-<details> <summary><b>DSH fails to start with "listen EACCES ... permission denied"</b></summary> That is Windows refusing the port, not another program using it: on Windows <code>EACCES</code> usually means the port falls inside a reserved range (Hyper-V / WSL / WinNAT keep such ranges). Check it with:<br> <code>netstat -ano | findstr :13080</code><br> <code>netsh interface ipv4 show excludedportrange protocol=tcp</code><br> If the port is taken or reserved, change <code>PORT</code> at the top of <code>start-dsh.bat</code> - the script forwards it to DSH via <code>--port</code>, so one edit is enough.
 
 ## 📄 License
 
@@ -151,24 +142,17 @@ If you do need the proxy, just keep it running - <code>start-dsh.bat check</code
 
 ## ✨ 特性
 
-- 🪄 **零门槛**：没有 Node.js？自动用 winget 安装；首次运行自动装官方包，之后双击秒开
-- ⚡ **快**：首次安装后启动约 1 秒；重复双击不会启动第二个实例，直接打开浏览器
-- 🔄 **更新提醒**：每次打开菜单都会把本地版本与官方最新版本并列显示，只提醒、绝不擅自安装
-- 💾 **可选备份**：如果脚本旁边有 `dsh-backup` 工具（或设置了 `DSH_BACKUP_PS1`），菜单选项 3 可备份聊天记录与插件
-- 🛡️ **纯净安全**：只从官方 npm registry 安装 `@deepseek-ai/dsh`，无任何第三方二进制、无数据收集
-- 🌍 **通用**：脚本为纯 ASCII，任何语言版本的 Windows 10/11 都能直接运行
-- 🚄 **国内加速**：默认把 npm 切到 npmmirror 国内镜像，国内安装飞快；失败自动回退官方源
-- 🛠️ **自动修复**：更新失败或 Node.js 升级后，下次启动会自动重建本地安装
+- 🪄 **零门槛**：缺 Node.js 时自动用 winget 安装，并装好官方包；之后启动约 1 秒
+- 🔄 **更新只提醒、绝不擅自安装**：菜单里并列显示你的版本与官方最新版；更新失败或 Node.js 升级后会自动重建
+- 🚄 **国内友好**：默认使用 npmmirror 国内镜像，失败自动回退官方源
+- 💾 **可选备份**：脚本旁有 `dsh-backup` 工具时，菜单选项 3 可备份聊天记录与插件
+- 🛡️ **安全通用**：只从官方源安装 `@deepseek-ai/dsh`，无第三方二进制、无数据收集；纯 ASCII 脚本，任何 Windows 10/11 语言版本可用
 
 ## 🚀 快速开始
 
 1. 下载 `start-dsh.bat`
 2. 双击后按 `1`（无需回车）
-3. 首次运行会自动安装（需要联网，约 1~3 分钟），完成后自动打开 `http://127.0.0.1:3080`
-
-就这么简单，之后的每次启动都是一键。
-
-> 提示：把 `start-dsh.bat` 发送到桌面快捷方式或固定到任务栏，日常使用更顺手。
+3. 首次运行自动安装（需联网，约 1~3 分钟），完成后自动打开 `http://127.0.0.1:13080`
 
 ## 📖 使用方法
 
@@ -200,10 +184,9 @@ If you do need the proxy, just keep it running - <code>start-dsh.bat check</code
 
 这个脚本的意义，就是让你**用官方程序，而不是来历不明的二次封装**：
 
-- ✅ 唯一安装来源：npm 官方 registry 的 `@deepseek-ai/dsh` 包
-- ✅ 不下载、不执行任何第三方可执行文件
-- ✅ 全部逻辑就是一个 `.bat` 文件，可逐行审计
-- ✅ 不收集任何数据，唯一联网行为是安装/更新官方包本身
+- ✅ 唯一来源：npm 官方 registry 的 `@deepseek-ai/dsh` 包，无任何第三方二进制
+- ✅ 全部逻辑就是一个 `.bat` 文件，可逐行审计，无混淆
+- ✅ 不收集任何数据；唯一联网行为是安装或更新该官方包
 
 ## ⚠️ 免责声明
 
@@ -229,8 +212,8 @@ If you do need the proxy, just keep it running - <code>start-dsh.bat check</code
 </details>
 
 <details>
-<summary><b>端口 3080 被占用怎么办？</b></summary>
-关闭占用 3080 端口的程序，或先运行 <code>start-dsh.bat check</code> 查看状态。
+<summary><b>端口 13080 被占用怎么办？</b></summary>
+关闭占用该端口的程序，或改 <code>start-dsh.bat</code> 顶部的 <code>PORT</code>。
 </details>
 
 <details>
@@ -266,7 +249,6 @@ If you do need the proxy, just keep it running - <code>start-dsh.bat check</code
 如果确实需要代理，保持它常开即可 —— <code>start-dsh.bat check</code> 会显示当前代理配置并给出提醒。
 </details>
 
-<details> <summary><b>启动报 "listen EACCES ... permission denied" 怎么办？</b></summary> 这是 Windows 拒绝了该端口，而不是别的程序占用。Windows 下 <code>EACCES</code> 通常意味着端口落在系统保留范围内（Hyper-V / WSL / WinNAT 会预留这样的范围）。可用下面两条命令确认：<br> <code>netstat -ano | findstr :13080</code><br> <code>netsh interface ipv4 show excludedportrange protocol=tcp</code><br> 如果端口被占用或落在保留范围里，改 <code>start-dsh.bat</code> 顶部的 <code>PORT</code> 即可 —— 脚本会通过 <code>--port</code> 传给 DSH，改一处全脚本生效。
 
 ## 📄 License
 
